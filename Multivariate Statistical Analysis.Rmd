@@ -1,0 +1,6100 @@
+---
+title: "R for Multivariate Statistics"
+author: "Han Jingfeng"
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    fig_height: 5.625
+    fig_width: 10
+    toc: yes
+    toc_depth: 4
+    number_sections: yes
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+  word_document: 
+    toc: yes
+    toc_depth: 4
+  pdf_document: 
+    fig_height: 5.625
+    fig_width: 10
+    toc: yes
+    toc_depth: 4
+    number_sections: yes
+    latex_engine: xelatex
+always_allow_html: true
+editor_options:
+  chunk_output_type: console
+CJKmainfont: Microsoft YaHei
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.align = "center",
+                      fig.showtext = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+
+```
+
+**加载程序包**
+
+```{r}
+
+# 加载程序包
+  library(pacman)  
+  p_load(tidyverse, patchwork, AER, png, jpeg, grid, 
+         install = FALSE, update = FALSE) 
+
+```
+
+**获取运行环境信息**  
+
+```{r eval=FALSE}
+
+# 获取运行环境信息：以列表形式返回结果
+  sessionInfo()
+  is.list(x = sessionInfo())
+  
+```
+
+# 多元统计分析概述 
+
+## 多元统计分析的定义
+
+多元统计分析是同时分析多个变量，从多元数据集中获取信息的统计方法。
+ 
+* 多元统计分析中的“元”是指变量的维度，也就是数据集中变量的个数。
+
+## 多元统计分析方法
+
+多元统计分析主要解决四个方面的问题：
+  
+* 经典降维：简化数据。
+
+  - 在不损失数据信息的条件下，对数据中的重复信息进行合并，以实现用尽量少的变量替代原有多个变量的目的，这就是降维。降维类似于对数据进行"健康减肥"。
+  
+  - 经典降维方法包括主成分分析（Principal component analysis, PCA）和因子分析（Factor analysis）。
+  
+    - 主成分分析主要用于构造"综合指标"，以实现将原始数据进行最大程度的区分。
+    
+    - 因子分析旨在找出导致原始高度相关的多个变量背后的变量（公因子）。
+
+* 归类问题：根据数据特征构造归类模式。归类问题包括：
+
+  - 分类问题：利用历史数据寻找分类规则，从而按照分类规则将观测样例划归至某一类（Classification）。
+
+  - 聚类问题：根据多元数据中存在的相似性或差异性将"相似"的个体聚为一类，称为聚类（Cluster）。
+
+* 预测问题：回归与相关性分析。
+
+* 统计推断：多元均值向量的假设检验。
+  
+## 多元分析起源
+
+在多元统计分析领域，很多早期的发展性研究都是由社会与行为科学（尤其是教育与心理学）的问题所驱动的：
+
+* 因子分析：用于解释关于人类行为与能力的心理学理论。
+
+* 主成分分析：用于分析学生在同一次考试、不同科目的学习成绩。
+
+* 典型相关分析：分析两次考试中学生成绩的关联性。
+
+一些多元统计分析的方法是由其他科学领域的问题所驱动产生的：
+
+* 线性判别分析：基于多个植物特征的植物分类问题。
+
+* 多元方差分析：农业试验。
+
+* 回归分析：遗传学与行星轨道学。
+
+## 多元分析的应用领域
+
+* 市场营销：预测新购买趋势；锁定忠实顾客；发掘潜在顾客；市场细分；精准营销。
+
+* 银行业：基于消费者特征的贷款政策评估；预测信用卡用户流失。
+
+* 金融行业：确定金融学指标之间的关系；追踪投资组合的变化、预测价格的拐点；预测高频股票交易的波动特征。
+
+* 保险行业：识别新保险购买者的特征；发现异常出现情况；锁定“高风险顾客”。
+
+* 医疗行业：疾病的早期警示；基于病人特征预测医生诊疗；精准医疗。
+
+* 分子生物学：基因测序；分析 DNA 微阵列；描述生物学方程；预测蛋白质构造。
+
+* 天文学：为天体编录（命名为行星、星系等）；识别天体之间的关系。
+
+* 法务会计：识别保险诈骗、信用卡诈骗、医疗诈骗；监控偷税行为；识别股票市场内幕交易。
+
+* 运动训练：发掘最有效的训练策略。
+
+用数据驱动价值：Data → Information → Knowledge → Wisdom。
+
+# 矩阵代数
+
+## 矩阵的定义与运算
+
+### 矩阵的定义
+
+* $p\times{q}$ 矩阵：$p$ 行 $q$ 列
+
+$$
+\mathbf{A}=\left(\begin{array}{ccccc}
+{a_{11}} & {\cdots} & {a_{1j}} & {\cdots} & {a_{1q}} \\
+{\vdots} & {} & {\vdots} & {} & {\vdots} \\
+{a_{i1}} & {\cdots} & {a_{ij}} & {\cdots} & {a_{iq}} \\
+{\vdots} & {} & {\vdots} & {} & {\vdots} \\
+{a_{p1}} & {\cdots} & {a_{pj}} & {\cdots} & {a_{pq}}
+\end{array}\right)
+$$
+
+* $p$ 维列向量：$p$ 行 $1$ 列，即矩阵的列数退化为 $q=1$。
+
+$$
+\boldsymbol{a}=\left(\begin{array}{c}
+a_{1} \\
+a_{2} \\
+\vdots \\
+a_{p}
+\end{array}\right)
+$$
+
+* $q$ 维行向量：$1$ 行 $q$ 列，即矩阵的行数退化为 $p=1$。
+ 
+$$\boldsymbol{a}^{\prime}=\boldsymbol{a}^{T}=\left(a_{1}, a_{2}, \cdots, a_{q}\right)$$
+  
+* 向量 $a$ 的长度
+
+$$\|\boldsymbol{a}\|=\sqrt{\boldsymbol{a}^{\prime} \boldsymbol{a}}=\sqrt{a_{1}^{2}+a_{2}^{2}+\cdots+a_{p}^{2}}$$
+  
+  - 单位向量：长度为 $1$ 的向量，即 $\|\boldsymbol{a}\|=1$。
+
+### 向量的几何意义
+
+一个向量可以有两个方面的几何意义：
+
+* 意义 1：向量空间中的一个坐标点。
+
+* 意义 2：向量空间中的一个既有方向又有长度的量。
+
+具体使用哪一个几何意义，需要根据实际情况具体问题具体分析。
+
+```{r}
+
+# 向量的几何意义
+  img <- readPNG(source = "Pictures/向量的几何意义.png")
+  grid.raster(image = img, name = "向量的几何意义")
+
+```
+
+### 特殊矩阵
+
+* 上三角矩阵：对角线以下的元素均为 $0$ 的方阵。
+
+$$\boldsymbol{A}=\left(\begin{array}{cccc}
+a_{11} & a_{12} & \cdots & a_{1 p} \\
+0 & a_{22} & \cdots & a_{2 p} \\
+\vdots & \vdots & & \vdots \\
+0 & 0 & \cdots & a_{p p}
+\end{array}\right)$$
+
+* 下三角矩阵：对角线以上的元素为 $0$ 的方阵。
+
+$$\boldsymbol{A}=\left(\begin{array}{cccc}
+a_{11} & 0 & \cdots & 0 \\
+a_{21} & a_{22} & \cdots & 0 \\
+\vdots & \vdots & & \vdots \\
+a_{p 1} & a_{p 2} & \cdots & a_{p p}
+\end{array}\right)$$
+
+* 对角矩阵：仅是对角线上的元素不全为 $0$ 的矩阵，或者说非对角线元素全为零的矩阵。
+
+$$\boldsymbol{A}=\left(\begin{array}{cccc}
+a_{11} & 0 & \cdots & 0 \\
+0 & a_{22} & \cdots & 0 \\
+\vdots & \vdots & & \vdots \\
+0 & 0 & \cdots & a_{p p}
+\end{array}\right)$$
+
+* 单位矩阵：对角矩阵中对角线上的元素全为 $1$ 的矩阵，记为 $\boldsymbol{I}$。
+
+$$\boldsymbol{I}=\boldsymbol{I}_{p}=\left(\begin{array}{cccc}
+1 & 0 & \cdots & 0 \\
+0 & 1 & \cdots & 0 \\
+\vdots & \vdots & & \vdots \\
+0 & 0 & \cdots & 1
+\end{array}\right)$$
+
+* 零矩阵：矩阵中的全部元素均为 $0$ 的矩阵。
+
+```{r}
+
+# 创建零矩阵
+  
+  # 方法 1
+  O <- matrix(data = 0, nrow = 2, ncol = 3, byrow = FALSE)
+  O
+  
+  # 方法 2
+  O <- matrix(data = integer(length = 6), nrow = 2, ncol = 3, byrow = FALSE) 
+  O
+
+```
+
+* $p$ 阶方阵：$p\times{p}$ 矩阵，$p$ 行 $p$ 列。  
+
+* 上三角矩阵
+
+```{r}
+
+# 创建上三角矩阵
+  A <- matrix(data = 1:9, nrow = 3, byrow = FALSE)
+  A[lower.tri(x = A, diag = FALSE)] <- 0
+  A
+
+```
+
+* 下三角矩阵
+
+```{r}
+
+# 创建下三角矩阵
+  A <- matrix(data = 1:9, nrow = 3, byrow = FALSE)  
+  A[upper.tri(x = A, diag = FALSE)] <- 0
+  A
+
+```
+
+* 对角矩阵
+
+  - 对角矩阵一定是个方阵。
+
+```{r}
+
+# 创建对角矩阵
+  diag(x = c(1, 3, 7))
+
+```
+
+* 单位阵
+
+```{r}
+
+# 创建单位阵
+  diag(x = 1, nrow = 3)
+  
+```
+
+* 对称矩阵：矩阵 $A$ 为方阵，满足 $A^{\prime}=A$，即矩阵的转置还是其本身。  
+
+```{r}
+
+# 创建对称矩阵
+  A_sys <- matrix(data = c(2, 3, 5, 3, 0, 1, 5, 1, 1), nrow = 3, byrow = TRUE)
+  
+# 检验矩阵是否为对称矩阵
+
+  # 方法 1
+  matrixcalc::is.symmetric.matrix(x = A_sys)
+  
+  # 方法 2
+  near(x = A_sys, y = t(x = A_sys))
+  all.equal(target = A_sys, current = t(x = A_sys))
+
+```
+
+```{r}
+
+# 创建 Hilbert 矩阵
+
+  # 方法 1
+  matrixcalc::hilbert.matrix(n = 3)
+
+  # 方法 2
+  Matrix::Hilbert(n = 3)
+
+```
+
+```{r}
+
+# 创建斐波那契矩阵：矩阵维度为 n + 1
+  matrixcalc::fibonacci.matrix(n = 3)
+
+```
+
+### 矩阵的运算
+
+* 如果矩阵 $A$ 和 $B$ 具有相同的维度，那么 $A+B$ 就是两个矩阵对应元素的相加。
+
+* 常数 $c$ 与 $A$ 的积就是常数 $c$ 与矩阵 $A$ 中每个元素的乘积。
+
+* 如果矩阵 $A$ 的列数等于矩阵 $B$ 的行数，那么矩阵 $A$ 与 $B$ 的积就等于：
+
+$$\boldsymbol{AB}=\left(\sum_{k=1}^{q} a_{ik} b_{kj}\right)$$
+
+### 矩阵的运算法则
+
+* $(\boldsymbol{A}+\boldsymbol{B})^{\prime}=\boldsymbol{A}^{\prime}+\boldsymbol{B}^{\prime}$
+
+* $(\boldsymbol{A B})^{\prime}=\boldsymbol{B}^{\prime} \boldsymbol{A}^{\prime}$
+
+* $\boldsymbol{A}\left(\boldsymbol{B}_{1}+\boldsymbol{B}_{2}\right)=\boldsymbol{A} \boldsymbol{B}_{1}+\boldsymbol{A} \boldsymbol{B}_{2}$
+
+* $\boldsymbol{A}\left(\sum_{i=1}^{k} \boldsymbol{B}_{i}\right)=\sum_{i=1}^{k} \boldsymbol{A} \boldsymbol{B}_{i}$
+
+* $c(\boldsymbol{A}+\boldsymbol{B})=c \boldsymbol{A}+c \boldsymbol{B}$  
+
+## 正交矩阵
+
+### 两个向量的正交
+
+两个向量的正交意味着：
+  
+* 如果向量 $a$ 和 $b$ 正交，那么 $a^{\prime}{b}=0$。
+
+* 如果向量 $a$ 和 $b$ 正交，那么几何上就表示两个向量是彼此垂直的。反之，如果两个向量是彼此垂直的，那么这两个向量也一定是正交的。
+
+### 正交矩阵
+
+如果矩阵 $A$ 为方阵且 $A{A^\prime}=I$，那么矩阵 $A$ 就称为正交矩阵。
+
+正交矩阵的三个等价定义：
+
+$$A{A^\prime}=I \iff {A^\prime}=A^{-1} \iff {A^\prime}A=I$$
+ 
+* 正交矩阵的行列式要么等于 $1$，要么就等于 $-1$。
+
+* 正交矩阵的每一行或每一列均为正交单位向量，即正交矩阵的行或列的长度均为 $1$。
+
+当 $A$ 为正交矩阵时，$y=Ax$ 就称对矩阵 $x$ 做了正交变换，正交变换在几何上意味着对原 $p$ 维坐标系做了刚性旋转或称正交旋转。
+
+```{r}
+
+# 正交矩阵
+  img <- readPNG(source = "Pictures/正交矩阵.png", native = TRUE)
+  grid.raster(image = img, name = "正交矩阵")
+
+```
+  
+## 矩阵的行列式、逆和秩
+
+### 行列式
+
+* 矩阵 $A$ 必须为方阵才能计算该矩阵的行列式。
+
+* 行列式的基本性质
+
+  - 如果矩阵 $A$ 的某行（或列）为零，则 $\mid A\mid=0$。
+
+  - $\mid A^\prime \mid=\mid A\mid$，矩阵转置后的行列式不变。
+  
+  - 如果矩阵 $A$ 的某一行（或列）是其他一些行（或列）的线性组合，则矩阵 $A$ 的行列式为零。
+  
+  - 如果矩阵 $A$ 为上三角矩阵、下三角矩阵或对角矩阵，则矩阵 $A$ 的行列式为其对角线元素之积。
+  
+  - 如果矩阵 $A$ 与矩阵 $B$ 均为 $p$ 阶方阵，则 $\mid{AB}\mid=\mid{A}\mid\mid{B}\mid$。
+  
+* 创建矩阵
+
+  - 使用 base 中的函数 matrix。
+  
+  - 使用 base 中的函数 as.matrix 将 R 对象转换为矩阵。
+  
+  - 使用 base 中的函数 rbind 或 cbind 将向量按行或按列将向量合并为矩阵。
+  
+* 计算矩阵的行列式使用 base 中的函数 det。
+
+```{r}
+
+# 创建矩阵：使用函数 matrix
+  A <- matrix(data = c(6, 0, 2, 3, 1, 4), nrow = 2, byrow = TRUE)
+  A
+  
+# 创建矩阵：使用函数 rbind
+  A <- rbind(c(1, 2, 3, 4, 5), 
+             c(2, 4, 7, 8, 9), 
+             c(3, 7, 10, 15, 20), 
+             c(4, 8, 15, 30, 20), 
+             c(5, 9, 20, 20, 40))
+  A  
+
+# 计算矩阵 A 的行列式
+  det(x = A)
+
+```
+
+### 矩阵的逆
+
+如果矩阵 $A$ 为方阵且行列式不为零，就称矩阵 $A$ 为非退化矩阵或非奇异矩阵，否则就称矩阵 $A$ 为退化矩阵或奇异矩阵。
+
+如果矩阵 $A$ 满足 $A{A^{-1}}=I$，就称矩阵 $A^{-1}$ 为矩阵 $A$ 的逆矩阵。
+
+* 只有非退化矩阵或非奇异矩阵才有逆矩阵。
+
+* 矩阵的逆矩阵是唯一的。
+
+逆矩阵的基本性质
+
+* $\boldsymbol{A} \boldsymbol{A}^{-1}=\boldsymbol{A}^{-1} \boldsymbol{A}=\boldsymbol{I}$
+
+* $\left(A^{\prime}\right)^{-1}=\left(A^{-1}\right)^{\prime}$
+
+* 若 $\boldsymbol{A}$ 和 $\boldsymbol{C}$ 均为 $p$ 阶非退化方阵, 则 $(AC)^{-1}=C^{-1} A^{-1}$
+
+* $\left|\boldsymbol{A}^{-1}\right|=|\boldsymbol{A}|^{-1}$
+
+* 若 $\boldsymbol{A}$ 是正交矩阵, 则 $A^{-1}=A^{\prime}$
+
+* 若 $\boldsymbol{A}=\operatorname{diag}\left(a_{11}, a_{22}, \cdots, a_{p p}\right)$ 非退化（即 $a_{ii} \neq 0, i=1,2, \cdots, p$），则
+
+$$\boldsymbol{A}^{-1}=\operatorname{diag}\left(a_{11}^{-1}, a_{22}^{-1}, \cdots, a_{p p}^{-1}\right)$$
+
+计算矩阵的逆矩阵
+
+* 使用 base 中的函数 solve。
+
+* 使用 matrixcalc 中的函数 matrix.inverse。
+
+```{r}
+
+# 计算矩阵 A 的逆矩阵
+  
+  # 方法 1  
+  solve(A)  
+  MASS::fractions(x = solve(A))
+  all.equal(target = solve(A) %*% A, current = A %*% solve(A))
+
+  # 方法 2
+  matrixcalc::matrix.inverse(x = A)  
+  all.equal(target = solve(A), current = matrixcalc::matrix.inverse(x = A))
+
+```
+
+### 矩阵的秩
+
+线性相关: 一组同维向量 $\boldsymbol{a}_{1}, \boldsymbol{a}_{2}, \cdots, \boldsymbol{a}_{n}$, 若存在不全为零的常数 $c_{1}, c_{2}, \cdots, c_{n}$，使得
+
+$$c_{1} \boldsymbol{a}_{1}+c_{2} \boldsymbol{a}_{2}+\cdots+c_{n} \boldsymbol{a}_{n}=\mathbf{0}$$
+
+线性无关：一组同维向量 $\boldsymbol{a}_{1}, \boldsymbol{a}_{2}, \cdots, \boldsymbol{a}_{n}$, 当且仅当常数 $c_{1}, c_{2}, \cdots, c_{n}$ 全为零时，使得
+
+$$c_{1} \boldsymbol{a}_{1}+c_{2} \boldsymbol{a}_{2}+\cdots+c_{n} \boldsymbol{a}_{n}=\mathbf{0}$$
+
+行秩: 矩阵 $\boldsymbol{A}$ 中线性无关的行向量的最大数目。
+
+列秩: 矩阵 $\boldsymbol{A}$ 中线性无关的列向量的最大数目。
+
+* 行秩和列秩必然相等, 统称为矩阵的秩, 记作 $\operatorname{rank}(\boldsymbol{A})$。
+
+矩阵秩的基本性质：
+
+* $\operatorname{rank}(\boldsymbol{A})=0 \Leftrightarrow \boldsymbol{A}=\mathbf{0}$。
+
+* 若 $\boldsymbol{A}$ 为 $p \times q$ 矩阵, 且 $\boldsymbol{A} \neq \mathbf{0}$, 则 $1 \leq \operatorname{rank}(\boldsymbol{A}) \leq \min \{p, q\}$。
+
+* $\operatorname{rank}(A)=\operatorname{rank}\left(A^{\prime}\right)$。
+
+* 若 $\boldsymbol{A}$ 和 $\boldsymbol{C}$ 为非退化方阵, 则 
+
+$$\operatorname{rank}(\boldsymbol{ABC})=\operatorname{rank}(\boldsymbol{B})$$
+
+* $p$ 阶方阵 $\boldsymbol{A}$ 是非退化的 $\Leftrightarrow \operatorname{rank}(\boldsymbol{A})=p$ (称作 $\boldsymbol{A}$ 满秩）。
+
+* $\operatorname{rank}\left(\boldsymbol{A} \boldsymbol{A}^{\prime}\right)=\operatorname{rank}\left(\boldsymbol{A}^{\prime} \boldsymbol{A}\right)=\operatorname{rank}(\boldsymbol{A})$。
+  
+计算矩阵的秩使用 matrixcalc 中的函数 matrix.rank。
+
+```{r}
+
+# 计算矩阵的秩
+  matrixcalc::matrix.rank(x = A)
+
+```
+
+## 矩阵的特征值、特征向量和迹
+
+在多元统计分析中，常常需要对高维数据进行降维。
+
+* 为了确定数据降维后原始数据信息保留了多少，这就涉及到了特征值。
+
+* 在将数据由高维到低维的降维过程中，为了确定数据的投影方向是什么，这就涉及到了特征向量。
+
+设 $A$ 是一个 $p$ 阶方阵，若对于一个数 $\lambda$，存在 $x\neq 0$，使得 $Ax=\lambda x$，则称 $\lambda$ 为方阵 $A$ 的一个特征值或特征根，而称 $x$ 为 $A$ 的属于 $\lambda$ 的一个特征向量。
+
+* $A$ 有 $p$ 个特征值（可能有相同的），记作 $\lambda_1,\lambda_2,\cdots,\lambda_p$（可以为复数），相应的特征向量分别为 $x_1,x_2,\cdots,x_p$。
+
+* 一般情况下取特征向量 $x_i$ 为单位向量，即满足 $\rVert{x_i}\rVert=1$
+
+特征值和特征向量的基本性质：
+
+* $A$ 和 $A^\prime$ 有相同的特征值。
+
+* 若 $A$ 和 $B$ 分别是 $p\times q$ 和 $q\times p$ 矩阵，则 $AB$ 和 $BA$ 有相同的非零特征值。
+
+* 若 $A$ 为实对称矩阵，则 $A$ 的特征值全为实数，$p$ 个特征值按大小依次表示为 $\lambda_1\geq\lambda_2\geq,\cdots,\geq\lambda_p$。若 $\lambda_i\neq\lambda_j$，则相应的特征向量 $x_i$ 与 $x_j$ 必正交，即 $x_i^\prime x_j=0$。
+
+* 若 $A$ 为对角阵，那么 $A$ 对角线上的元素就是 $A$ 的特征值，特征值所对应的特征向量分别为 $\boldsymbol{e}_{1}=(1,0, \cdots, 0)^{\prime}, \quad \boldsymbol{e}_{2}=(0,1,0, \cdots, 0)^{\prime}, \cdots, \boldsymbol{e}_{p}=(0, \cdots, 0,1)^{\prime}$
+
+* $|\boldsymbol{A}|=\prod_{i=1}^{p} \lambda_{i}$。
+
+计算矩阵的特征值和特征向量使用程序包 base 中函数 eigen。
+
+设 $A$ 为 $p$ 阶方阵，则 $A$ 的迹（trace）定义为 $A$ 的对角线元素之和。
+
+* 特征向量是彼此正交的，由特征向量构成的矩阵是正交矩阵。
+
+* 特征值或特征根之和等于矩阵的迹，特征值或特征根之积等于矩阵的行列式。
+
+* 若 $A$ 为投影矩阵，则 $\text {tr}(A)=\text {rank}(A)$。
+
+  - 若方阵 $A$ 满足 $A^2=A$ 就称 $A$ 为幂等矩阵，对称的幂等矩阵就称为投影矩阵。
+  
+计算矩阵的迹使用程序包 matrixcalc 中的函数 matrix.trace
+
+```{r}
+
+# 计算矩阵的各行之和
+  rowSums(x = A, na.rm = TRUE)
+
+# 计算矩阵的各列之和
+  colSums(x = A, na.rm = TRUE)
+
+# 计算矩阵中所有元素之和
+  sum(A, na.rm = TRUE)
+
+```
+
+```{r}
+
+# 计算矩阵的行均值
+  
+  # 计算矩阵中所有行的均值
+  rowMeans(x = A, na.rm = TRUE)
+
+  # 计算矩阵中第 1、3、5 行的均值
+  matrixStats::rowMeans2(x = A, rows = c(1, 3, 5), na.rm = TRUE)
+
+  # 计算分块矩阵中第 1、3、5 行的均值
+  matrixStats::rowMeans2(x = A, rows = c(1, 3, 5), cols = c(1, 3, 5), 
+                         na.rm = TRUE)
+
+```
+
+```{r}
+
+# 计算矩阵的列均值
+
+  # 计算矩阵中所有列的均值
+  colMeans(x = A, na.rm = TRUE)
+
+  # 计算矩阵中第 1、3、5 列的均值
+  matrixStats::colMeans2(x = A, cols = c(1, 3, 5))
+
+  # 计算分块矩阵中第 1、3、5 列的均值
+  matrixStats::colMeans2(x = A, rows = c(1, 3, 5), cols = c(1, 3, 5), 
+                         na.rm = TRUE)
+
+```
+
+```{r}
+
+# 计算矩阵的维度
+  dim(x = A)
+ 
+# 计算矩阵的行数
+  nrow(x = A)
+
+# 计算矩阵的列数
+  ncol(x = A)
+
+# 计算矩阵的转置
+  t(x = A)
+
+```
+
+```{r}
+
+# 计算矩阵的特征值和特征向量
+  eigens <- eigen(x = A, only.values = FALSE)
+  
+  # 提取矩阵的特征值
+  eigenvalues <- eigens$values
+
+  # 提取矩阵的特征向量
+  eigenvectors <- eigens$vectors
+
+# 计算矩阵的迹
+  sum(diag(x = A), na.rm = TRUE)
+  matrixcalc::matrix.trace(x = A)
+  
+# 验证矩阵特征值的和等于矩阵的迹 
+  all.equal(target = sum(eigenvalues, na.rm = TRUE), 
+            current = matrixcalc::matrix.trace(x = A))
+
+# 验证矩阵特征值的积等于矩阵的行列式
+  all.equal(target = det(x = A), current = prod(eigenvalues, na.rm = TRUE))
+
+# 验证特征向量是单位向量
+  q <- ncol(x = eigenvectors)
+  for (i in seq(1:q)) {
+    print(x = sum(eigenvectors[, i]^2, na.rm = TRUE))
+  }
+  
+# 验证特征向量之间彼此正交
+  for (i in 1:q) {
+    for (j in (i + 1):q) {
+      if (i + 1 > q) {
+        print("finished")
+      } else print(as.vector(x = t(eigenvectors[, i]) %*% eigenvectors[, j]))
+    }
+  }
+  
+```
+
+## 正定矩阵、半正定矩阵
+
+设 $A$ 是对称矩阵，则定义：  
+
+* 二次型：$x\prime{A}{x}$，其中 $x$ 是一个向量。
+
+* 正定矩阵：如果对一切 $x\neq 0$，都有 $x^\prime{A}{x}>0$，就称 $A$ 为正定矩阵，记作 $A>0$。
+
+* 半正定矩阵：如果对一切 $x$，都有 $x^\prime{A}{x}\geq 0$，就称 $A$ 为半正定矩阵，记作 $A\geq 0$。
+
+正定矩阵的性质
+
+* 如果 $A$ 为正定矩阵，那么 $A$ 的特征根均大于零、$A$ 是正交矩阵、$A^{-1}$ 也是正定矩阵。
+
+* 如果 $A$ 为半正定矩阵，那么 $A$ 的秩等于 $A$ 的正特征根的个数。
+
+```{r}
+
+# 判断矩阵是否为正定矩阵
+  matrixcalc::is.positive.definite(x = A)
+  
+# 判断矩阵是否为半正定矩阵
+  matrixcalc::is.positive.semi.definite(x = A)  
+  
+# 判断矩阵是否为负定矩阵
+  matrixcalc::is.negative.definite(x = A)  
+
+# 判断矩阵是否为半负定矩阵
+  matrixcalc::is.negative.semi.definite(x = A)  
+
+# 验证矩阵是否为幂等矩阵
+  all.equal(target = A %*% A, current = A)
+
+```
+  
+# 多元数据的描述与展示
+
+## 一元随机变量的数值特征描述
+
+### 总体的均值、方差与标准差
+
+对随机变量 $Y$：
+
+* 总体均值：刻画数据的中心位置 
+
+$$\mu=E(Y)=\int y f(y) dy$$
+
+* 总体方差与总体标准差：刻画数据的离散程度或变异程度
+
+$$\sigma^{2}=\operatorname{var}(Y)=\frac{1}{n}E(Y-\mu)^{2}$$
+
+$$\sigma=\sqrt{\sigma^{2}}$$
+
+```{r}
+
+# 创建随机变量
+  set.seed(seed = 2631)
+  xnorm <- rnorm(n = 100, mean = 0, sd = 1)
+
+# 计算总体均值、方差与标准差
+  library(rafalib)
+  mean(x = xnorm, trim = 0, na.rm = TRUE)
+  popvar(x = xnorm)
+  popsd(x = xnorm, na.rm = TRUE)
+
+```
+
+### 样本的均值、方差与标准差
+
+对独立同分布的随机样本 $\left\{y_{1}, \dots, y_{n}\right\}$
+
+* 样本均值
+
+$$\bar{y}=\frac{1}{n} \sum_{i=1}^{n} y_{i}$$
+
+* 样本方差
+
+$$s^{2}=\frac{1}{n-1} \sum_{i=1}^{n}\left(y_{i}-\bar{y}\right)^{2}$$
+
+* 样本标准差
+
+$$s=\sqrt{s^{2}}$$
+
+```{r}
+
+# 计算样本均值、方差与标准差
+  mean(x = xnorm, trim = 0, na.rm = TRUE)
+  var(x = xnorm, na.rm = TRUE)
+  sd(x = xnorm, na.rm = TRUE)  
+
+```
+
+### 一元随机变量的可视化
+
+对于随机变量来说，人们最为关注的是随机变量的分布特征。
+
+* 刻画随机变量的分布特征，最常使用直方图与核密度图。
+
+**绘制一元数据散点图**
+
+```{r}
+
+# 绘制一元数据散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = xnorm, type = "p", col = "blue", pch = 20, panel.first = grid())
+  par(opar)
+  
+```
+  
+**绘制直方图**
+
+```{r}
+
+# 绘制直方图：方法 1
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  hist(x = xnorm, breaks = "fd", col = "steelblue", border = "black",
+       labels = TRUE, panel.first = grid(), main = "Histogram")
+  box()
+  par(opar)
+  
+```
+
+```{r}
+
+# 绘制直方图：方法 2
+  results <- hist(x = xnorm, breaks = "fd", plot = FALSE)  
+  k <- results$breaks
+  
+  ggplot(mapping = aes(x = xnorm)) +
+    geom_histogram(breaks = k, color = "black") +
+    stat_bin(geom = "text", breaks = k, label = results$counts, color = "blue",
+             vjust = -0.5) +
+    labs(x = "Random Variable", y = "Frequency", title = "Histogram") +
+    theme_bw()
+
+```
+
+```{r}
+
+# 绘制直方图：方法 3
+  library(simplevis)
+  gg_histogram(data = data.frame(xnorm), x_var = xnorm, pal = "blue", 
+               alpha_fill = 0.5, alpha_line = 1, size_line = 1, 
+               x_expand = c(0.2, -0.2), x_title = "Random Variable",
+               y_title = "Frequency", title = "Histogram")
+
+```
+
+**绘制核密度图**
+
+```{r}
+
+# 绘制核密度图：方法 1 
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  dens <- density(x = xnorm)  
+  plot(dens, panel.first = grid(), zero.line = FALSE, col = "gray", 
+       xlab = "Ramdom Variable", ylab = "Density", main = "Density Plot")
+  polygon(dens, col = "steelblue")
+  rug(x = xnorm, col = "blue")
+  par(opar)
+
+``` 
+ 
+```{r}
+
+# 绘制核密度图：方法 2
+  ggplot(mapping = aes(x = xnorm)) +
+    geom_density(fill = "steelblue") +
+    labs(x = "Ramdom variable", y = "Density", title = "Density Plot")
+
+```  
+
+```{r}
+
+# 绘制核密度图：方法 3
+  library(simplevis)
+  gg_density(data = as.data.frame(x = xnorm), x_var = xnorm, pal = "steelblue", 
+             alpha_fill = 1, title = "Density Plot") +
+    labs(x = "Ramdom Variable", y = "Density", title = "Density Plot")
+
+```  
+
+```{r}
+
+# 绘制核密度图：方法 4
+  library(car)
+
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  densityPlot(x = xnorm, grid = TRUE, col = "blue", lty = 1, lwd = 2,
+              method = "adaptive", xlab = "Random Variable", ylab = "Density",
+              main = "Density Plot")
+  par(opar)
+
+``` 
+  
+**绘制直方图 + 核密度图**
+
+```{r}
+
+# 绘制直方图 + 核密度图：方法 1
+  library(rafalib) 
+
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  shist(z = xnorm, plotHist = TRUE, unit = 0.5, panel.first = grid(), 
+        col = "blue", lwd = 2, xlab = "Random Variable", ylab = "Frequency", 
+        main = "Histogram & Density Plot")
+  box()
+  par(opar)
+
+```
+
+```{r}
+
+# 绘制直方图 + 核密度图：方法 2
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  hist(x = xnorm, breaks = "fd", freq = FALSE, col = "steelblue", 
+       border = "black", panel.first = grid(), ylim = c(0, 0.45),
+       xlab = "Random Variable", 
+       ylab = "Density", main = "Histogram & Density Plot")
+  lines(x = density(x = xnorm), col = "blue", lty = 1, lwd = 2)
+  box()
+  par(opar)
+
+```
+
+```{r}
+
+# 绘制直方图 + 核密度图：方法 3
+  results <- hist(x = xnorm, breaks = "fd", plot = FALSE)
+  bks <- results$breaks
+  
+  ggplot(mapping = aes(x = xnorm)) +
+    geom_histogram(mapping = aes(y = ..density..), breaks = bks, 
+                   fill = "darkgreen", color = "gray") +
+    geom_density(color = "blue", size = 1) +
+    labs(x = "Random Variable", y = "Density", 
+         title = "Histogram & Density Plot")
+  
+```
+
+## 多元随机变量
+
+### 多元概率分布函数
+
+随机向量：一个向量，若它的分量都是随机变量。
+
+* 随机变量 $x$ 的分布函数表示为：
+
+$$F(a)=P(x\leq a)$$
+
+* 随机变量 $x_1$ 与 $x_2$ 的联合分布函数表示为：
+
+$$F(a_1, a_2)=P(x_1\leq a_1, x_2\leq a_2)$$
+
+* 随机向量 $x=(x_1, x_2, \ldots, x_p)\prime$ 的分布函数表示为：
+
+$$F(a_1, a_2, \ldots, a_p)=P(x_1\leq a_1, x_2\leq a_2, \ldots, x_p\leq a_p)$$
+
+### 边缘分布
+
+边缘分布：$p$ 维随机向量 $x=(x_1, x_2, \ldots, x_p)\prime$ 的任意子向量的分布。
+
+* 边缘分布可以是关于一个变量、两个变量、直至 $p−1$ 个变量的边缘分布。
+
+### 条件分布
+
+条件分布：给定一些已知条件下的随机变量或随机向量的概率分布。
+
+### 独立性
+
+独立性：如果多个随机变量之间或随机向量的各个元素之间的取值彼此互不影响，就认为多个随机变量之间或随机向量的各个元素之间是相互独立的。
+
+* 如果随机变量 $x_1,x_2,\ldots,x_n$ 之间是相互独立的，则有：
+
+$$f(x_1,x_2,\ldots,x_n)=f(x_1)f(x_2)\ldots f(x_n)$$
+
+* 如果随机向量 $X_1,X_2,\ldots,X_n$ 之间是相互独立的，则有：
+
+$$f(X_1,X_2,\ldots,X_n)=f(X_1)f(X_2)\ldots f(X_n)$$
+
+## 多元随机变量的数值特征
+
+### 数学期望（均值）
+
+随机向量 $\boldsymbol{x}=\left(x_{1}, x_{2}, \cdots, x_{p}\right)^{\prime}$ 的数学期望记为  $\boldsymbol{\mu}=\left(\mu_{1}, \mu_{2}, \cdots, \mu_{p}\right)^{\prime}$。
+
+* 随机向量的数学期望等于由随机向量中各个分量的数学期望构成的向量。
+
+随机矩阵 $\boldsymbol{X}=\left(x_{i j}\right)$ 的数学期望
+
+$$E(\boldsymbol{X})=\left(E\left(x_{i j}\right)\right)=\left(\begin{array}{cccc}
+E\left(x_{11}\right) & E\left(x_{12}\right) & \cdots & E\left(x_{1 q}\right) \\
+E\left(x_{21}\right) & E\left(x_{22}\right) & \cdots & E\left(x_{2 q}\right) \\
+\vdots & \vdots & & \vdots \\
+E\left(x_{p 1}\right) & E\left(x_{p 2}\right) & \cdots & E\left(x_{p q}\right)
+\end{array}\right)$$
+
+* 随机矩阵 $X=(x_{ij})$ 的数学期望等于由随机矩阵中各个元素的数学期望构成的矩阵。
+
+### 随机矩阵 $X$ 的数学期望的性质
+
+* 设 $a$ 为常数，则
+
+$$E(a \boldsymbol{X})=a E(\boldsymbol{X})$$
+
+* 设 $\boldsymbol{A}, \boldsymbol{B}, \boldsymbol{C}$ 为常数矩阵，则
+
+$$E(\boldsymbol{A} \boldsymbol{X} \boldsymbol{B}+\boldsymbol{C})=\boldsymbol{A} E(\boldsymbol{X}) \boldsymbol{B}+\boldsymbol{C}$$
+
+  - 特别地，对于随机向量 $\boldsymbol{x}$，有
+
+$$E(\boldsymbol{A x})=\boldsymbol{A} E(\boldsymbol{x})$$
+
+* 设 $\boldsymbol{X}_{1}, \boldsymbol{X}_{2}, \cdots, \boldsymbol{X}_{n}$ 为 $n$ 个同阶的随机矩阵，则
+
+$$E\left(\boldsymbol{X}_{1}+\boldsymbol{X}_{2}+\cdots+\boldsymbol{X}_{n}\right)=E\left(\boldsymbol{X}_{1}\right)+E\left(\boldsymbol{X}_{2}\right)+\cdots+E\left(\boldsymbol{X}_{n}\right)$$
+
+### 协方差矩阵
+  
+令 $x$ 和 $y$ 为两个随机向量，那么 $x$ 与 $y$ 的协方差矩阵就表示为：$\text{Cov}(x,y)$。
+
+* 若 $\text{Cov}(x,y)=0$，则称随机向量 $x$ 与随机向量 $y$ 是不相关的。
+
+* 如果两个随机向量 $x$ 和 $y$ 是彼此独立的，那么随机向量 $x$ 和 $y$ 必然是不相关，反之未必。
+
+* 当随机向量 $x=y$ 时，$\text{Cov}(x,x)$ 就称为随机向量 $x$ 的方差矩阵。
+
+协方差矩阵的性质：
+
+* 协方差矩阵一定是正定阵。
+
+* 协方差矩阵一定是对称矩阵。
+
+### 相关系数矩阵
+
+令 $x$ 和 $y$ 为两个随机向量，那么 $x$ 与 $y$ 的相关系数矩阵就表示为 ${\rho}(x,y)$。
+  
+* 相关系数矩阵度量了随机向量 $x$ 和 $y$ 之间线性依赖关系的强弱。
+
+* 相关系数矩阵一定是一个非负定阵并且是对称阵。
+
+### 相关系数矩阵与协方差矩阵的关系
+
+$\boldsymbol{R}=\left(\rho_{i j}\right)$ 与 $\boldsymbol{\Sigma}=\left(\sigma_{i j}\right)$ 之间的关系为：
+ 
+$$\boldsymbol{R}=\boldsymbol{D}^{-1} \boldsymbol{\Sigma} \boldsymbol{D}^{-1}$$
+
+其中，
+
+$$\boldsymbol{D}=\operatorname{diag}\left(\sqrt{\sigma_{11}}, \sqrt{\sigma_{22}}, \cdots, \sqrt{\sigma_{p p}}\right)$$
+ 
+$\boldsymbol{R}$ 与 $\boldsymbol{\Sigma}$ 的相应元素之间的关系为：
+
+$$\rho_{i j}=\frac{\sigma_{i j}}{\sqrt{\sigma_{i i}} \sqrt{\sigma_{j j}}}$$
+
+### 多元随机变量的数值特征
+
+```{r}
+
+# 读取数据
+  data("iris", package = "datasets")
+  attach(what = iris)  
+
+# 均值向量
+  colMeans(x = iris[, -5], na.rm = TRUE)
+
+# 协方差矩阵  
+  cov(iris[, -5], use = "pairwise.complete.obs", method = "pearson")
+
+# 相关系数矩阵
+  cor(iris[, -5], use = "pairwise.complete.obs", method = "pearson")
+
+  detach(name = iris)
+
+``` 
+
+## 多元随机变量的可视化
+
+### 散点图
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+
+# 绘制散点图矩阵：方法 1
+  pairs(x = iris[, -5], pch = 20, col = "blue", cex.main = 0.8, cex.labels = 1,
+        main = "Scatterplot Matrix for IRIS")
+
+  detach(name = iris)
+
+```  
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+
+# 绘制散点图矩阵：方法 2
+  library(car)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex.main = 0.8)
+  scatterplotMatrix(x = iris, smooth = FALSE, regLine = FALSE, groups = Species,
+                    by.groups = TRUE, legend = TRUE, cex.labels = 0.8,
+                    main = "Scatterplot Matrix for IRIS by Species")
+  par(opar)
+
+  detach(name = iris)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+
+# 绘制散点图矩阵：方法 3
+  library(scatterPlotMatrix)
+  scatterPlotMatrix(data = iris[, -5])
+  
+  detach(name = iris)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+
+# 三维散点图：方法 1，分组三维散点图
+  library(lattice)
+  cloud(Sepal.Length ~ Petal.Length * Petal.Width, data = iris, 
+        groups = Species, screen = list(z = 20, x = -70, y = 2), 
+        key = list(title = "Iris Data", x = 0.05, y = 1, corner = c(0, 1), 
+                   border = TRUE, 
+                   points = Rows(trellis.par.get("superpose.symbol"), 1:3),
+                   text = list(levels(iris$Species)), cex = 0.8, cols = 3))
+  
+  detach(name = iris)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+
+# 综合图：使用程序包 GGally 中的函数 ggpairs
+  library(GGally)
+
+  ggpairs(data = iris,
+          columns = 1:4, # 使用第 1 ~ 4 变量
+          title = "Plots Matrix", # 可更改图片标题
+          axisLabels = "show", # 默认 show, 展示坐标轴；还可以使用 none, internal
+          columnLabels = c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width"), # 更改变量名
+          aes(colour = Species, alpha = 0.9), # {ggplot2} 中 aes()，按 type 分类
+          upper = list(continuous = wrap("cor", size = 3.5, displayGrid = TRUE)), # 相关系数
+          lower = list(continuous = wrap("smooth", alpha = 0.3, size = 1.5)), # 平滑曲线
+          diag = list(continuous = "density")) + # 对角线
+    scale_color_manual(values = c("indianred", "darkgreen", "slateblue")) + # 自定义散点图的颜色
+    scale_fill_brewer(palette = 1) + # 自定义对角线直方图的颜色
+    theme_bw() # 主题
+
+  detach(name = iris)
+
+```
+
+### 相关系数图
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+
+# 绘制相关
+  library(corrplot)
+  par(cex = 0.8)
+  corrplot(corr = cor(x = iris[, -5]), method = "ellipse", type = "full", 
+           diag = TRUE, mar = c(6, 6, 4, 4), addCoef.col = "red", bg = "gray",
+           number.cex = 0.8)
+  par(opar)
+
+  detach(name = iris)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+
+# 绘制相关系数的网络图：图中红线表示相关系数为负值
+  library(qgraph)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  corr.mat <- cor(iris[1:4], use = "pairwise.complete.obs", method = "pearson")
+  qgraph(input = corr.mat, cut = 0.3, details = TRUE, posCol = "steelblue")
+  par(opar)
+
+  detach(name = iris)
+
+```
+
+### 星相图
+
+星相图（star plots）是针对每个观察样例在每个变量上的观测数值进行绘图，如果数据框中含有 $n$ 个观察样例，那么就需要绘制 $n$ 幅星相图，每幅星相图的每个顶点表示一个变量。
+
+* 星相图要求观测值的数据必须是非负的。
+
+* 星相图与蛛网图和雷达图在本质是一致的。 
+
+* 绘制星相图使用函数 stars(X, draw.segments = FALSE,key.loc = NULL,...)
+
+```{r}
+
+# 读取数据
+  data("mtcars", package = "datasets")  
+  attach(what = mtcars)  
+  
+# 绘制星相图 
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(4, 4, 4, 4))
+  stars(x = mtcars[1:12, 1:7], full = TRUE, scale = TRUE, radius = TRUE,
+        nrow = 3, draw.segments = TRUE, cex = 0.8, xlim = c(1, 13), 
+        ylim = c(1, 8), key.loc = c(12, 4), key.xpd = TRUE, 
+        main = "Star Plots for Motor Cars")
+  par(opar)
+  
+  detach(name = mtcars)
+
+```
+
+```{r}
+
+# 读取数据
+  expenditures <- rio::import(file = "Data/expenditures.xlsx")
+  anyNA(x = expenditures)
+  
+  expenditures <- arrange(.data = expenditures, desc(x = Total))
+
+# 绘制星相图 
+  expenditures_new <- expenditures[c(1:5, 27:31), 1:9]
+  attach(what = expenditures_new)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  stars(x = expenditures_new[-1], nrow = 3, full = TRUE, labels = Region, scale = TRUE, 
+        frame.plot = FALSE, draw.segments = TRUE, key.loc = c(9, 2), radius = 0.5,
+        main = "Expenditures of China's 10 Provinces")
+  par(opar)
+  
+  detach(name = expenditures_new)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = expenditures_new)
+
+# 绘制雷达图 
+
+  # 方法 1
+  library(radarchart)
+  chartJSRadar(scores = expenditures_new, showLegend = TRUE, addDots = TRUE, 
+               main = "Radar Chart for Expenditures of China's 10 Provinces")
+
+  # 方法 2
+  library(ggiraphExtra)
+  p1 <- ggRadar(data = expenditures_new[1:5, ], mapping = aes(group = Region)) 
+  p2 <- ggRadar(data = expenditures_new[6:10, ], mapping = aes(group = Region)) 
+  p3 <- ggRadar(data = expenditures_new, mapping = aes(group = Region))
+  p1 + p2 + p3
+
+  detach(name = expenditures_new)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = expenditures_new)
+
+# 绘制雷达图 
+  library(radarBoxplot)
+  radarBoxplot(Region ~ ., data = expenditures_new, use.ggplot2 = TRUE)
+
+  detach(name = expenditures_new)
+
+```
+
+### Andrews 曲线
+
+```{r}
+
+# 读取数据
+  attach(what = expenditures_new)
+  expends <- as.matrix(x = expenditures_new[, -1])
+  
+# 绘制 Andrews 曲线
+
+  # 方法 1
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  MSG::andrews_curve(x = expends, panel.first = grid())
+  legend("topright", legend = expenditures_new[1:5, 1], col = 1:5, lty = 1, lwd = 1,
+         ncol = 2)  
+  
+  # 方法 2
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+
+  pracma::andrewsplot(A = expends, f = 1:5, style = "pol", scaled = FALSE)
+  legend("topright", legend = expenditures_new[1:5, 1], col = 1:5, lty = 1, lwd = 1,
+         ncol = 2, cex = 0.8) 
+  
+  pracma::andrewsplot(A = expends, f = 1:5, style = "cart", scaled = FALSE)
+  panel.last = grid()
+  legend("topright", legend = expenditures_new[1:5, 1], col = 1:5, lty = 1, lwd = 1,
+         ncol = 2, cex = 0.8)
+  
+  par(opar)
+  
+  detach(name = expenditures_new)
+
+```
+
+### 脸谱图
+
+脸谱图是 Chernooff.H 于 1973 年首次提出的，它是将每个变量用人脸型的某一部位的形状或大小来表达，这样利用 $p$ 个变量的数值就可以勾画出一个人的脸谱，从而用于展示每个观测样例的数据分布特征。
+
+通过分析不同观测样例脸谱图之间的差异，能够反映各个观测样例之间存在的差异。
+
+切尔诺夫脸谱图对核实以下两点很有帮助：
+
+* 根据专业知识和直觉提出初始的聚类
+
+* 使用聚类算法得到最终的聚类
+
+绘制脸谱图使用程序包 aplpack 中的函数 faces。
+
+```{r}
+
+# 读取数据
+  attach(what = expenditures_new)
+
+# 绘制脸谱图
+  opar <- par(no.readonly = TRUE)
+  par(cex.main = 0.8)
+  
+  # 仅绘制脸谱线，不填充颜色
+  aplpack::faces(expenditures_new[, -1], which.row = 1:10, face.type = 0, fill = TRUE,
+                 ncol.plot = 5, labels = Region, cex = 0.8,
+                 main = "Chernoff Faces for Expenditures of China's 10 Provinces")
+  
+  # 绘制脸谱线并填充颜色
+  aplpack::faces(expenditures_new[, -1], which.row = 1:10, face.type = 1, fill = TRUE,
+                 ncol.plot = 5, labels = Region, cex = 0.8,
+                 main = "Chernoff Faces for Expenditures of China's 10 Provinces")
+
+  # 绘制填充颜色的圣诞老人
+  aplpack::faces(expenditures_new[, -1], which.row = 1:10, face.type = 2, fill = TRUE,
+                 ncol.plot = 5, labels = Region, cex = 0.8,
+                 main = "Chernoff Faces for Expenditures of China's 10 Provinces")
+  
+  par(opar)
+  
+  detach(name = expenditures_new)
+
+```
+
+### 平行坐标图
+
+平行坐标图（parallel coordinate plot，PCP）是对多元数据进行可视化展示的常用方法。
+
+平行坐标图是针对多元数据中的 $n$ 个观测样例的 $p$ 个变量进行绘图，图中的每一条线表示一个观测样例，每一个轴表示一个变量。
+
+平行坐标图的缺点在于，在数据非常密集时可能会显得过于杂乱，导致难以辨认。因此，绘制平行坐标图时应该仅针对感兴趣的观测对象和变量进行绘图。
+
+在 R 中，绘制平行坐标图主要使用以下函数：
+
+* 使用程序包 MASS 中的函数 parcoord。
+
+```{r}
+
+# 读取数据
+  attach(what = mtcars)
+
+# 平行坐标图：使用程序包 MASS 中的函数 parcoord
+  library(MASS)
+  library(RColorBrewer)
+
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  parcoord(x = mtcars[, c(2, 3, 4, 6, 1)], col = brewer.pal(n = 5, name = "Set3"), 
+           var.label = TRUE, main = "Parallel Coordinates Plot for Motor Trend Car")
+  par(opar)
+
+  detach(name = mtcars)
+
+```
+
+* 使用程序包 GGally 中的函数 ggparcoord。
+
+```{r}
+
+# 读取数据
+  attach(what = expenditures_new)
+
+# 平行坐标图：使用程序包 GGally 中的函数 ggparcoord
+  library(GGally)
+  ggparcoord(data = expenditures_new[1:5, ], columns = 2:9, groupColumn = 1, scale = "std", 
+             boxplot = FALSE, showPoints = TRUE, splineFactor = FALSE, 
+             mapping = aes(color = Region), title = "Parallel Coordinates Plot for IRIS") 
+
+  detach(name = expenditures_new)
+
+```
+
+## 欧氏距离和马氏距离
+
+### 欧氏距离
+
+欧式距离计算的是观测对象两两之间在空间上的直线距离。
+
+$\boldsymbol{x}=\left(x_{1}, x_{2}, \cdots, x_{p}\right)^{\prime}$ 与 $\boldsymbol{y}=\left(y_{1}, y_{2}, \cdots, y_{p}\right)^{\prime}$ 之间的欧氏距离为：
+
+$$d(\boldsymbol{x}, \boldsymbol{y})=\sqrt{\left(x_{1}-y_{1}\right)^{2}+\left(x_{2}-y_{2}\right)^{2}+\cdots+\left(x_{p}-y_{p}\right)^{2}}$$
+
+平方欧氏距离为：
+
+$$\begin{aligned}
+d^{2}(\boldsymbol{x}, \boldsymbol{y}) &=\left(x_{1}-y_{1}\right)^{2}+\left(x_{2}-y_{2}\right)^{2}+\cdots+\left(x_{p}-y_{p}\right)^{2} \\
+&=(\boldsymbol{x}-\boldsymbol{y})^{\prime}(\boldsymbol{x}-\boldsymbol{y})
+\end{aligned}$$
+
+如果各变量的单位不全相同，则上述欧氏距离是没有意义的。
+
+如果对各分量都作标准化变换，则各分量方差同为 $1$，于是：
+
+* 平方和中各分量所起的平均作用都一样。
+
+* 如果各分量的单位不全相同，则标准化可不受单位不同的影响。
+
+计算欧氏距离使用 stats 中的函数 dist，该函数能够计算 "euclidean"、"maximum"、"manhattan"、"canberra"、"binary" 以及 "minkowski"。
+
+* 函数 dist 返回一个由配对欧氏距离构成的矩阵。
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+  
+# 计算随机向量中各观测样例之间的配对欧氏距离
+  iris_euc <- dist(x = iris[1:6, -5],method = "euclidean", diag = FALSE, 
+                   upper = FALSE)
+  iris_euc
+
+  detach(name = iris)
+
+```   
+
+### 马氏距离
+ 
+欧氏距离经变量的标准化之后虽能够消除各变量的单位或方差不同的影响，但不能消除变量之间相关性带来的不利影响。
+
+马氏距离也称统计距离，它首先对随机向量进行正交变换，然后再对正交变换后的随机向量进行标准化变换，最后计算欧氏距离，这个欧氏距离就是马氏距离。
+
+$\boldsymbol{x}=\left(x_{1}, x_{2}, \cdots, x_{p}\right)^{\prime}$ 与 $\boldsymbol{y}=\left(y_{1}, y_{2}, \cdots, y_{p}\right)^{\prime}$ 之间的平方马氏距离定义为：
+
+$$\boldsymbol{d}^{2}(\boldsymbol{x}, \boldsymbol{y})=(\boldsymbol{x}-\boldsymbol{y})^{\prime} \Sigma^{-1}(\boldsymbol{x}-\boldsymbol{y})$$
+  
+$\boldsymbol{x}=\left(x_{1}, x_{2}, \cdots, x_{p}\right)^{\prime}$ 到总体 $\pi$ 的平方马氏距离定义为：
+
+$$d^{2}(\boldsymbol{x}, \pi)\left(=d^{2}(\boldsymbol{x}, \boldsymbol{\mu})\right)=(\boldsymbol{x}-\boldsymbol{\mu})^{\prime} \Sigma^{-1}(\boldsymbol{x}-\boldsymbol{\mu})$$ 
+
+* 马氏距离将所有变量标准化为具有相同方差的变量，并且消除了变量之间的相关性。
+
+* 马氏距离的实质就是两个经过"变换"后的变量之间的欧氏距离。
+
+* 马氏距离是一个与随机变量中各分量的单位无关的无量纲纯数值。
+
+* 当各分量不相关时马氏距离即为各分量经标准化后的欧氏距离。 
+  
+计算马氏距离使用 stats 中的函数 mahalanobis，该函数返回一个由平方马氏距离构成的向量。
+
+```{r}
+
+# 读取数据
+  attach(what = iris)
+
+# 计算随机变量之间的马氏距离
+  iris_mahal <- mahalanobis(x = iris[, -5], center = colMeans(x = iris[, -5]), 
+                            cov = cov(iris[, -5]), inverted = FALSE)  
+  iris_mahal
+  
+# 绘制马氏距离的核密度图
+  ggplot(mapping = aes(x = iris_mahal)) +
+    geom_density(fill = "steelblue") +
+    xlim(c(-2, 15)) +
+    labs(x = "Mahalanobis Distances, n = 145", y = "Density", 
+         title = "Density Plot for Mahalanobis Distances")
+
+  detach(name = iris)
+
+``` 
+
+# 多元正态分布
+
+## 多元正态分布的定义  
+
+若随机向量 $\boldsymbol{x}=\left(x_{1}, x_{2}, \cdots, x_{p}\right)^{\prime}$ 的概率密度函数为：
+
+$$f(\boldsymbol{x})=(2 \pi)^{-p / 2}|\Sigma|^{-1 / 2} \exp \left[-\frac{1}{2}(\boldsymbol{x}-\boldsymbol{\mu})^{\prime} \Sigma^{-1}(\boldsymbol{x}-\boldsymbol{\mu})\right]$$
+
+则称 $\boldsymbol{x}$ 服从 $p$ 元正态分布，记作 $\boldsymbol{x} \sim N_{p}(\boldsymbol{\mu}, \Sigma)$。其中，参数 $\boldsymbol{\mu}$ 和 $\boldsymbol{\Sigma}$ 分别为 $\boldsymbol{x}$ 的均值和协差阵。
+
+```{r}
+
+# 绘制二元正态分布的概率密度图
+
+  # 创建数据
+  library(fMultivar)
+
+  x <- seq(-4, 4, by = 0.1)
+  X <- grid2d(x = x)
+  z <- dnorm2d(x = X$x, y = X$y, rho = 0.9)
+  ZD <- list(x = x, y = x, z = matrix(data = z, ncol = length(x)))
+  
+# 绘制二元正态分布
+  persp(x = ZD, theta = 30, phi = 30, col = "orange",
+        main = "二元正态分布概率密度图")
+  
+# 绘制二元正态分布概率密度的等高线
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4), las = 1)
+  contour(x = ZD, col = "blue", panel.first = grid(), 
+          main = "Bivariate Normal Density")
+  par(opar)
+
+```
+
+```{r}
+
+# 绘制二元正态分布的累积概率密度图
+
+  # 创建数据
+  library(fMultivar)
+
+  x <- seq(-4, 4, by = 0.1)
+  X <- grid2d(x = x)
+  z <- pnorm2d(x = X$x, y = X$y, rho = 0.5)
+  ZP <- list(x = x, y = x, z = matrix(data = z, ncol = length(x)))
+  
+# 绘制二元正态分布的累积概率密度图
+  persp(x = ZP, theta = 30, phi = 30, col = "steelblue")
+  
+# 绘制二元正态分布的累积概率密度的等高线
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4), las = 1)
+  contour(x = ZP, col = "blue", panel.first = grid(),
+          main = "Bivariate Normal Cumulated Probability")
+  par(opar)
+
+```
+
+```{r}
+
+# 生成服从二元正态分布的随机向量
+  r <- rnorm2d(n = 5000, rho = 0.5)
+   
+# 绘制二元正态分布随机向量的散点图 + 概率密度等高线
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4), las = 1)
+  plot(r, col = "steelblue", pch = 20, panel.first = grid(), xlab = "r1", 
+       ylab = "r2", main = "二元正态分布随机向量的散点图 + 概率密度等高线") 
+  contour(x = ZD, add = TRUE, lwd = 2, col = "red")
+   
+# 绘制二元正态分布随机向量的六边形图 + 概率密度等高线
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4), las = 1)
+  plot(x = hexBinning(x = r, bins = 50), col = terrain.colors(n = 12),
+       panel.first = grid(), addRug = TRUE, xlab = "r1", ylab = "r2", 
+       main = "二元正态分布随机向量的六边形图 + 概率密度等高线")
+  contour(x = ZD, add = TRUE, lwd = 2, col = "blue")
+   
+```
+
+## 多元正态分布的性质
+  
+* 服从多元正态分布的随机向量 $X$ 的线性组合也服从多元正态分布。
+  
+* 多元正态分布的任何边缘分布仍为多元正态分布，反之则未必成立。
+  
+* 对于多元正态变量而言，其子向量之间彼此互不相关与彼此相互独立是等价的。
+
+* 两个多元正态向量的和：现考虑两个 $p$ 维多元向量 $y$ 和 $x$，如果 $y\sim{N_p(\mu_y,\Sigma_{yy})}$，$x\sim{N_p(\mu_x,\Sigma_{xx})}$ 并且 $y$ 与 $x$ 相互独立，则： 
+
+$$y\pm{x}\sim{N_p(\mu_y\pm{\mu_x},\Sigma_{yy}+\Sigma_{xx})}$$
+  
+* 标准化多元正态向量：对于任意以 $\mu$ 为均值、$\Sigma$ 为协方差矩阵的向量 $y$，我们可得到其标准化的向量 $\boldsymbol{z}$ 是以 $\boldsymbol{0}$ 为均值向量、以 $\boldsymbol{I}$ 为协方差矩阵的多元正态向量。
+
+* 多元正态向量的二次型 $\boldsymbol{zz^\prime}$ 构成一个自由度为 $p$ 的服从 $\chi^2$ 分布的随机变量。
+
+## 单变量正态性的检验
+  
+### 直方图
+  
+```{r}
+
+# 创建数据
+  set.seed(seed = 2631)
+  xnorm <- rnorm(n = 100, mean = 0, sd = 1)
+  xexponential <- rexp(n = 100, rate = 2)
+  xt <- rt(n = 100, df = 7)
+  xf <- rf(n = 100, df1 = 7, df2 = 17)
+  mydf <- data.frame(xnorm, xexponential, xt, xf)
+  
+# 绘制直方图：方法 1
+  opar <- par(no.readonly = TRUE)
+  par(cex.axis = 0.8, cex.main = 0.8, cex.lab = 0.8, mfrow = c(2, 2))  
+  apply(X = mydf, MARGIN = 2, FUN = function(x){
+    hist(x, breaks = "fd", panel.first = grid(), xlab = "", 
+         main = paste("Frequency Histogram"))
+    box()
+  }
+  )  
+  
+  par(opar)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+  
+# 绘制直方图：方法 2
+  opar <- par(no.readonly = TRUE)
+  par(cex.axis = 0.8, cex.main = 0.8, cex.lab = 0.8, mfrow = c(2, 2))  
+  
+  for (i in 1:4) {
+    hist(x = mydf[, i], breaks = "fd", panel.first = grid(), col = "steelblue", 
+         xlab = colnames(x = mydf)[i], ylab = "Frequency", 
+         main = paste("Frequency Histogram for ", colnames(x = mydf)[i], 
+                      sep = ""))
+    box()
+  }
+  
+  par(opar)
+
+  detach(name = mydf)
+
+``` 
+
+### Q-Q 图
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制 Q-Q 图：方法 1
+  opar <- par(no.readonly = TRUE)
+  par(cex.axis = 0.8, cex.main = 0.8, cex.lab = 0.8, mfrow = c(2, 2))  
+  apply(X = mydf, MARGIN = 2, FUN = function(x){
+    car::qqPlot(x = x, pch = 20, col = "black", main = "Q-Q Plot")
+  }
+  )
+  
+  par(opar)
+
+  detach(name = mydf)
+
+``` 
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制 Q-Q 图：方法 2
+  opar <- par(no.readonly = TRUE)
+  par(cex.axis = 0.8, cex.main = 0.8, cex.lab = 0.8, mfrow = c(2, 2))  
+  
+  for (i in 1:4) {
+    car::qqPlot(x = mydf[, i], pch = 20, col = "black", 
+                xlab = colnames(x = mydf)[i], ylab = "Frequency", 
+                main = paste("Q-Q Plot for ", colnames(x = mydf)[i], sep = ""))
+  }
+  
+  par(opar)
+  
+  detach(name = mydf)
+
+``` 
+
+### 偏度和峰度
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 计算偏度
+  library(DescTools)
+  apply(X = mydf, MARGIN = 2, FUN = Skew, na.rm = TRUE)  
+
+# 计算偏度：输出结果已经做减 3 处理
+  apply(X = mydf, MARGIN = 2, FUN = Kurt, na.rm = TRUE)  
+
+  detach(name = mydf)
+
+``` 
+
+### 正态性的统计检验
+
+正态性的统计检验都是基于以下假设：
+
+* $H_0$：数据服从正态分布
+
+* $H_1$：数据不服从正态分布
+
+**Shapiro-Wilks 正态性检验**
+
+Shapiro-Wilks 正态性检验（也称 SW 检验）的统计量为：
+
+$${\displaystyle W={\left(\sum_{i=1}^{n}a_{i}x_{(i)}\right)^{2} \over \sum _{i=1}^{n}(x_{i}-{\overline {x}})^{2}}}$$
+
+* $x_{(i)}$ 是第 $i$ 个样本的次序统计量
+
+* $a_{(i)}$ 是标准正态分布中第 $i$ 个次序统计量标准化的期望值
+
+* $\sqrt{W}$ 是实际数据与正态得分之间的相关系数
+
+  - $W$ 越接近于 $1$ 表示数据越可能服从正态分布，$W$ 越小于 $1$ 表示数据越不可能服从正态分布
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# Shapiro-Wilks 正态性检验
+  apply(X = mydf, MARGIN = 2, FUN = shapiro.test)
+
+  detach(name = mydf)
+  
+``` 
+
+**Kolmogorov-Smirnov 正态性检验**
+
+Kolmogorov-Smirnov 正态性检验（也称 KS 检验）的统计量为：
+  
+$$D=\sqrt{n}{\sup_{y}\mid{F_n(y)-F_0(y)}\mid}$$
+
+* $F_n(y)$ 是数据的经验累积分布函数（cdf），$F_0(y)$ 是与数据同均值、同方差的正态分布的累积分布函数。  
+
+* $D$ 值越大，表示数据越不可能服从正态分布，也就是越可能拒绝 $H_0$。 
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# Kolmogorov-Smirnov 正态性检验
+  for (i in 1:4) {
+    results <- ks.test(x = mydf[, i], y = pnorm, alternative = "two.sided", 
+                       exact = FALSE)
+    print(x = results)
+  }
+  
+  detach(name = mydf)
+
+``` 
+  
+**Cramer-von Mises 正态性检验**
+
+Cramer-von Mises 正态性检验（也称 CVM 检验）的统计量为：
+
+$$C=\int_{-\infty}^{\infty} {[F_n(y)-F_0(y)]^2} \,{\rm d}F_0(y)$$
+
+* $C$ 值越大，越不可能服从正态分布，越可能拒绝 $H_0$。
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# Cramer-von Mises 正态性检验
+  apply(X = mydf, MARGIN = 2, FUN = nortest::cvm.test)
+
+  detach(name = mydf)
+
+``` 
+
+**Anderson-Darling 正态性检验**
+  
+Anderson-Darling 正态性检验（也称 AD 检验）的统计量为：
+
+$$A=\int_{-\infty}^{\infty} \frac{{[F_n(y)-F_0(y)]^2}}{F_0(y)(1-F_0(y))} \,{\rm d}F_0(y)$$
+
+* Anderson-Darling 正态性检验与 Cramer-von Mises 正态性检验的最主要区别在于：
+
+  - Anderson-Darling 正态性检验对数据分布中双尾处的异常值实施了惩罚，也就是使得双尾异常值对数据分布的影响被放大。
+
+* $A$ 值越大，越不可能服从正态分布，越可能拒绝 $H_0$。
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# Anderson-Darling 正态性检验
+  apply(X = mydf, MARGIN = 2, FUN = nortest::ad.test)
+  
+  detach(name = mydf)
+
+``` 
+
+## 多变量正态性的检验
+
+检验多元数据的正态性，使用程序包 mvnormtest 中函数 mshapiro.test 直接进行检验。
+
+* 如果原始数据为数据框，需要将原始数据转置为矩阵。
+
+* 函数 mshapiro.test 要求观测样例不超过 $5000$。
+
+```{r}
+
+# 读取数据
+  data("USairpollution", package = "HSAUR2")
+  attach(what = USairpollution)
+
+# 多元正态性的检验
+  library(mvnormtest)
+  mshapiro.test(U = t(x = USairpollution))
+
+  detach(name = USairpollution)
+
+```
+
+# 多元数据均值向量的检验
+
+## 多元检验的动机
+
+对于多元数据不能针对数据中的每个维度分别进行一元检验，原因在于：
+
+* 一元检验完全忽略了变量之间的相关性。
+
+* 一元检验会使整体第一类错误的概率（Family-wise Type I error rate）增大，整体第一类错误的概率为：
+  
+$$1-(1-\alpha)^p$$
+  
+  - $p$ 是检验的次数 
+  
+* 一元检验有时会降低统计功效（power）：较小的个体效应（individual effects）可能累积成为显著的联合效应（joint effect）
+
+## 单样本均值向量 $\mu$ 的检验
+
+### $\boldsymbol\Sigma$ 已知的情况
+
+* 前提假设（Assumption）：$p$ 维独立同分布的样本 $\{\boldsymbol{y_1},\ldots,\boldsymbol{y_p}\}$ 服从 $N_p(\boldsymbol{\mu},\boldsymbol{\Sigma})$ 分布，其中 $\boldsymbol{\mu}$ 是未知的，$\boldsymbol{\Sigma}$ 是已知的。
+
+* 待检验假设（Hypothesis）：  
+  
+$$H_0:\boldsymbol{\mu}=\boldsymbol{\mu_0} \quad H_A:\boldsymbol{\mu}\neq\boldsymbol{\mu_0}$$ 
+  
+* 检验统计量（Test statistic）：样本均值向量与假设向量的平方马氏距离，称为 $\boldsymbol{Z^2}$ 检验统计量。
+
+  - 在原假设 $H_0$ 成立的条件下，$\boldsymbol{Z^2}$ 检验统计量服从 $\chi_\alpha^2(p)$，$p$ 是均值向量的维度。
+  
+示例：假定一组由 $20$ 名大学男生构成的样本所对应的身高和体重数据服从 $N_2(\boldsymbol{\mu},\boldsymbol{\Sigma})$ 分布，其中：
+
+$$\boldsymbol\Sigma= \begin{pmatrix} 20 & 100 \\ 100 & 1000 \\ \end{pmatrix}$$。
+
+* 我们的目标是检验原假设 $H_0:\boldsymbol{\mu}=(70, 170)^\prime$。
+
+```{r}
+
+# 创建数据
+  height <- c(69, 74, 68, 70, 72, 67, 66, 70, 76, 68, 72,79, 74, 67, 66, 71, 74, 75, 75, 
+              76)
+  weight <- c(153, 175, 155, 135, 172, 150, 115, 137, 200, 130, 140, 265, 185, 112, 140, 
+              150, 165, 185, 210, 220)
+  mydf <- data.frame(height = height, weight = weight)
+
+# 单样本均值向量均值的检验：手动计算
+  avgs_vect <- apply(X = mydf, MARGIN = 2, FUN = mean)
+  avgs_vect
+
+  n <- nrow(x = mydf)
+  p <- ncol(x = mydf)
+
+  sigma <- matrix(data = c(20, 100, 100, 1000), nrow = 2)
+  sigma_inv <- matrixcalc::matrix.inverse(x = sigma)
+
+  h0 <- c(70, 170)
+  
+  diffs <- avgs_vect - h0
+  
+  zsq <- as.vector(x = n * t(x = diffs) %*% sigma_inv %*% diffs)
+  
+  pchisq(q = zsq, df = p, lower.tail = FALSE)
+  
+  nhstplot::plotchisqtest(chisq = zsq, df = p)
+  
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制数据椭圆
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  dataEllipse(x = height, y = weight, levels = c(0.5, 0.95), pch = 20, col = "blue", 
+              fill.alpha = 0.1, fill = TRUE, xlim = c(60, 85), ylim = c(0, 300), 
+              ellipse.label = c(0.5, 0.95), center.pch = 19, center.cex = 1,
+              xlab = "Height", ylab = "Weight", 
+              main = "Data Ellipse for Height vs. Weight",
+              id = list(method = "mahal", n = 1, cex = 1, col = "red", location = "lr",
+                        labels = rownames(x = mydf)))
+  points(x = h0[1], y = h0[2], type = "p", col = "red", pch = 15, cex = 1)
+  par(opar)
+
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 生成服从二元正态分布的随机向量
+  library(MASS)
+  set.seed(seed = 2631)
+  multiNorms <- mvrnorm(n = 20, mu = h0, Sigma = sigma)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  dataEllipse(x = multiNorms[, 1], y = multiNorms[, 2], levels = c(0.5, 0.95), pch = 20, 
+              col = "blue", fill.alpha = 0.1, fill = TRUE, xlim = c(55, 90), 
+              ylim = c(0, 300), ellipse.label = c(0.5, 0.95), center.pch = 19, 
+              center.cex = 1, xlab = "y1", ylab = "y2", main = "Data Ellipse for Multinorms",
+              id = list(method = "mahal", n = 1, cex = 1, col = "red", location = "lr",
+                        labels = rownames(x = multiNorms)))
+  points(x = avgs_vect[1], y = avgs_vect[2], type = "p", col = "red", pch = 15, cex = 1)
+  par(opar)
+
+```
+
+### 分别进行一元检验与一次进行多元检验的比较
+
+```{r}
+
+# 分别进行一元检验与一次进行多元检验的比较
+  img <- readPNG(source = "Pictures/一元检验与多元检验.png")
+  grid.raster(image = img, name = "分别进行一元检验与一次进行多元检验的比较")
+
+```
+
+* 当多元检验和分别一元检验的结果产生分歧的时候，我们更加倾向于相信多元检验的结果。
+
+* 在椭圆里面但又落在矩形外面的点，解释了一元检验为何会提高发生第一类错误（Type Ⅰ error）的概率。
+
+* 在矩形里面但又落在椭圆外面的点，解释了多元检验为何会更具有统计功效（power）。
+
+### $\boldsymbol\Sigma$ 未知的情况
+
+在实践中，$\boldsymbol\Sigma$ 通常是未知的，对此应该使用 Hotelling's $T^2$ 检验。
+  
+* Hotelling's $T^2$ 检验统计量在原假设 $\boldsymbol \mu=\boldsymbol{\mu_0}$ 成立的条件下，服从 Hotelling's $T^2{(p,n-p)}$ 分布。
+
+  - $p$ 是多元随机变量的维度，$n$ 是多元随机变量的观测样例个数。
+  
+* 如果 $T^2>T^2{(p,n-1)}$，那么就拒绝原假设 $H_0$。
+
+* 要进行 Hotelling's $T^2$ 检验，必须保证 $n>p$。
+
+* Hotelling's $T^2$ 检验统计量可以通过下式转化为 $F$ 分布：
+
+$$\frac{n-p}{p(n-1)}T^2(p,n-p)=F(p,n-p)$$
+  
+```{r}
+
+# 读取数据
+  mydf <- read.table(file = "Data/t5-1.dat")
+  names(x = mydf) <- c("sweat.rate", "sodium", "potassium")
+  
+# 均值向量检验：使用程序包 DescTools 中的函数 HotellingsT2Test
+  
+  # 方法 1：使用 F 检验统计量
+  results <- DescTools::HotellingsT2Test(x = mydf, mu = c(4, 50, 10), test = "f")
+  
+  # 提取 T2 检验统计量：转换后服从 F 分布的统计量
+  results$statistic
+  
+  # 提取自由度
+  results$parameter
+  
+  # 提取 p 值
+  results$p.value
+  
+  # 方法 2
+  results <- DescTools::HotellingsT2Test(x = mydf, mu = c(4, 50, 10), test = "chi")
+
+  # 提取 T2 检验统计量：服从卡方分布的统计量
+  results$statistic
+  
+  # 提取自由度
+  results$parameter
+  
+  # 提取 p 值
+  results$p.value
+  
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 均值向量检验：使用程序包 ICSNP 中的函数 HotellingsT2
+
+  # 方法 1
+  results <- ICSNP::HotellingsT2(X = mydf, mu = c(4, 50, 10), test = "f")
+  
+  # 提取 T2 检验统计量：转换后服从 F 分布的统计量
+  results$statistic
+  
+  # 提取自由度
+  results$parameter
+  
+  # 提取 p 值
+  results$p.value
+  
+  # 方法 2
+  results <- ICSNP::HotellingsT2(X = mydf, mu = c(4, 50, 10), test = "chi")
+
+  # 提取 T2 检验统计量：服从卡方分布的统计量
+  results$statistic
+  
+  # 提取自由度
+  results$parameter
+  
+  # 提取 p 值
+  results$p.value
+
+```
+
+## 多元双样本均值向量的检验
+
+关于多元双样本检验，需要考虑两种情况：
+
+* 独立样本（Independent sample）：总体 1 与总体 2 之间是彼此独立的。
+
+* 配对样本（Paired sample）：总体 1 与总体 2 之间是彼此相关的。
+
+### 独立双样本均值向量的检验  
+
+* 前提假设（Assumption）：两个样本所在总体分别服从 $N_p(\mu_1,\Sigma)$ 和 $N_p(\mu_2,\Sigma)$ 的多元正态分布，其中 $\Sigma$ 是未知的总体协方差矩阵，两个样本所在总体是彼此独立的。
+
+* 待检验假设（Hypothesis）：
+
+$$H_0:\boldsymbol{\mu_1}=\boldsymbol{\mu_2} \quad H_A:\boldsymbol{\mu_1}\neq\boldsymbol{\mu_2}$$ 
+
+* 检验统计量（Test statistic）：
+  
+```{r}
+
+# 检验统计量
+  img <- readPNG(source = "Pictures/检验统计量.png")
+  grid.raster(image = img, name = "检验统计量")
+
+```
+
+* 在原假设成立的条件下，检验统计量 $T^2$ 服从 $T^2(p,n_1+n_2-2)$ Hotelling $T^2$ 分布：
+ 
+  - 如果 $T^2>T^2_\alpha(p,n_1+n_2-2)$，那么就拒绝原假设 $H_0$。
+  
+  - 如果拒绝原假设 $H_0$，不意味着就可以拒绝全部或部分的 $H_0:\mu_{1j}=\mu_{2j}$。
+
+```{r}
+
+# 创建数据
+  library(ICSNP)
+  set.seed(123456)
+  X <- rmvnorm(n = 20, mean = c(0, 0, 0, 0), sigma = diag(1:4))
+  Y <- rmvnorm(n = 30, mean = c(0.5, 0.5, 0.5, 0.5), sigma = diag(1:4))
+  Z <- rbind(X, Y)
+  g <- factor(x = rep(c(1, 2), c(20, 30)))
+  
+# 独立双样本均值向量检验：使用程序包 ICSNP 中的函数 HotellingsT2
+  
+  # 方法 1：使用 F 检验统计量
+  HotellingsT2(X = X, Y = Y, mu = c(0, 0, 0, 0), test = "f")
+  HotellingsT2(Z ~ g, mu = rep(-0.5, 4), test = "f")
+  
+  # 方法 2：使用卡方检验统计量
+  HotellingsT2(X = X, Y = Y, mu = c(0, 0, 0, 0), test = "chi")
+  HotellingsT2(Z ~ g, mu = rep(-0.5, 4), test = "chi")
+
+```  
+
+### 配对双样本均值向量的检验  
+  
+```{r}
+
+# 创建数据
+  depth2 <- c(51, 41, 43, 41, 47, 32, 24, 43, 53, 52, 57, 44, 57, 40, 68)
+  nums2 <- c(35, 14, 19, 29, 34, 26, 19, 37, 24, 27, 14, 19, 30, 7, 13)
+  coat2 <- cbind(depth2 = depth2, nums2 = nums2)
+
+  depth1 <- c(73, 43, 47, 53, 58, 47, 52, 38, 61, 56, 56, 34, 55, 65, 75)
+  nums1 <- c(31, 19, 22, 26, 36, 30, 29, 36, 34, 33, 19, 19, 26, 15, 18)
+  coat1 <- cbind(depth1 = depth1, nums1 = nums1)
+
+# 配对双样本均值向量的检验
+  diffs <- coat2 - coat1
+  ICSNP::HotellingsT2(X = diffs, mu = c(0, 0), test = "f")
+  ICSNP::HotellingsT2(X = diffs, mu = c(0, 0), test = "chi")
+
+```
+
+# 判别分析
+  
+## 判别分析概述
+
+### 判别分析的目标
+
+* 预测：也称分类或分配。预测是指在已知历史上用某些方法已把研究对象分成若干组别（也称类或总体）的情况下，来判定新观测样例应归属的组别。
+
+  - 判别分析中的分类方法：距离判别、贝叶斯（Bayes）判别和费希尔（Fisher）判别等。其中，距离判别与贝叶斯判别仅适用于分类。
+  
+* 描述：也称分离。描述是指利用图形（通常是二维图形，有时也会是三维或一维图形，一般通过降维实现）方法或代数方法描述各组别中观测样例之间的差异性，从而最大限度地分离各个组别。
+
+  - 判别分析中的分离方法：费希尔（Fisher）判别，该方法更多地是用于分离。
+  
+### 判别分类的原则
+
+判别分类是在依据不完备信息情况下进行的，因此难免会发生误判，好的判别分类方法应使发生误判的概率尽可能的小。
+ 
+### 判别分类的示例
+
+* 有偿付力与无偿付力的财产责任保险公司。
+
+  - 判别变量：总资产，股票与债券价值，股票与债券的市值，损失支出，盈余，签定的保费金额等。
+  
+* 新产品的速购者与迟购者。
+
+  - 判别变量：教育，收入，家庭大小，过去更换品牌的次数等。
+  
+* 良好信用与不良信用风险。
+
+  - 判别变量：收入，年龄，信用卡数量，家庭规模等。
+  
+**注意**：这里仅讨论判别变量为定量变量（间隔变量）的判别分析。  
+
+## 基于平方马氏距离的分类判别：两组情形
+
+### 一般判别规则
+
+问题：对 $i=1,2$，令组别分别为 $\boldsymbol\pi_i$ 的均值向量为 $\mu_i$，协差阵为 $\boldsymbol\Sigma_i$，$x$ 是一个新的 $p$ 维观测样例，现欲判断它属于哪一组。
+
+基于马氏距离的一般判别规则：
+ 
+$$\left\{\begin{array}{ll}
+\boldsymbol{x} \in \pi_{1}, & \text { 若 } d^{2}\left(\boldsymbol{x}, \pi_{1}\right) \leq d^{2}\left(\boldsymbol{x}, \pi_{2}\right) \\
+\boldsymbol{x} \in \pi_{2}, & \text { 若 } d^{2}\left(\boldsymbol{x}, \pi_{1}\right)>d^{2}\left(\boldsymbol{x}, \pi_{2}\right)
+\end{array}\right.$$
+
+其中，$d^2$ 表示平方马氏距离。 
+ 
+### $\boldsymbol\Sigma_1=\boldsymbol\Sigma_2=\boldsymbol\Sigma$ 时的判别  
+    
+如果 $\boldsymbol\Sigma_1=\boldsymbol\Sigma_2=\boldsymbol\Sigma$，就有
+  
+$$d^2(x,\pi_1)-d^2(x,\pi_2)=-2a^\prime(x-\bar\mu),\quad \bar{\mu}=\frac{1}{2}(\mu_1+\mu_2),\quad a=\boldsymbol\Sigma^{-1}(\mu_1-\mu_2)$$
+
+令 $W(x)=a^\prime(x-\bar\mu)$，则上述分类规则可简化为：
+
+$$\left\{\begin{array}{ll}
+\boldsymbol{x} \in \pi_{1}, & \text { 若 } W(\boldsymbol{x}) \geq 0 \\
+\boldsymbol{x} \in \pi_{2}, & \text { 若 } W(\boldsymbol{x})<0
+\end{array}\right.$$
+
+* 其中，$W(x)$ 称为两组距离的线性判别函数，$a$ 称为判别系数向量。
+  
+### 误判概率
+  
+设 $\pi_1\sim N_p(\boldsymbol{\mu_1},\boldsymbol{\Sigma})$，$\pi_2\sim N_p(\boldsymbol{\mu_2},\boldsymbol{\Sigma})$，则误判概率为：
+
+$$P(2\mid1)=P(1\mid2)=\Phi(-\Delta/2)$$
+
+其中，$\Delta$ 是两个组别均值向量之间的马氏距离：
+
+$$\Delta=\sqrt{(\boldsymbol{\mu_1-\mu_2})^\prime\boldsymbol{\Sigma^{-1}}(\boldsymbol{\mu_1-\mu_2})}$$
+
+```{r}
+
+# 误判概率图
+  img <- readPNG(source = "Pictures/误判概率图.png")
+  grid.raster(image = img, name = "误判概率图")
+
+``` 
+  
+由上图可见：
+
+* 两个服从多元正态分布的随机向量越是分开（即 $\Delta$ 越大），分类效果也就越好，误判概率也就越小，判别效果也就越好。
+
+* 当两个正态组很接近时，误判概率将会很大，此时作判别分析就没有什么实际意义了。
+   
+对两组均值向量之间是否过于接近的判定：
+  
+* 我们可设定原假设 $H_0: \mu_1=\mu_2$，备择假设 $H_1: \mu_1\neq\mu_2$，然后进行假设检验。
+
+  - 如果假设检验结果不能拒绝原假设 $H_0$，就说明两组的均值向量之间无显著差异，此时作判别分析是徒劳的。
+  
+  - 如果假设检验结果拒绝了原假设 $H_0$，就说明两组的均值向量之间存在显著差异。但这种差异是否大到足以进行有效的判别分析还不能确定，此时还应看误判概率是否超过了一个合理的水平。
+
+### 使用样本估计两组距离判别中的未知参数 
+
+给定两个组别 $\boldsymbol\pi_1$ 和 $\boldsymbol\pi_2$ 服从多元正态分布，这时从两个组别中分别抽取容量为 $n_1$ 和 $n_2$ 的样本且 $n_1+n_2-2\geq{p}$，则有：
+  
+* $\mu_1$ 和 $\mu_2$ 使用样本均值向量作为无偏估计量。
+  
+* 协方差矩阵 $\boldsymbol\Sigma$ 的联合无偏估计量为：
+  
+$$\S_p=\frac{(n_1-1)S_1+(n_2-1)S_2}{n_1+n_2-2}$$  
+
+其中，
+
+$$S_i=\frac{1}{n_i-1}\Sigma_{j=1}^{n_i}(x_{ij}-\bar{x_i})(x_{ij}-\bar{x_i})^\prime,\quad i=1,2$$
+  
+* 使用样本估计误判概率 $\Phi(-\Delta/2)$ 时是有偏估计量，但大样本时偏差的影响是可以忽略的。  
+ 
+### 误判概率的非参数估计
+  
+若两组不能假定为正态组，则 $P(2|1)$ 与 $P(1|2)$ 可以用样本中观测样例的误判比例来估计，通常有如下三种非参数估计方法：
+  
+* 回测法
+
+  - 令 $n(2\mid1)$ 为样本中实为 $\pi_1$ 但却误判为 $\pi_2$ 的样例个数，$n(1\mid2)$ 为样本中实为 $\pi_2$ 但却误判为 $\pi_1$ 的样例个数，则误判概率为：
+
+$$\hat{P}(2\mid1)=\frac{n(2\mid1)}{n_1}$$
+
+
+$$\hat{P}(1\mid2)=\frac{n(1\mid2)}{n_2}$$
+
+* 该方法简单、直观，且易于计算。但它给出的误判概率估计值通常偏低，或称对误判概率的估计过于乐观。但是当样本容量非常大时，偏低的影响可忽略。 
+  
+* 拆分样本
+
+  - 将整个样本拆分为训练样本（用于构造判别函数）和验证样本（用于对该判别函数进行评估）。误判概率用验证样本的误判比例来估计，该估计是无偏的。该方法主要有两个缺陷：
+  
+    - 需要使用大样本。
+  
+    - 该方法构造的判别函数只用了部分样本数据，与使用全部样本数据构造的判别函数相比，损失了很多有价值的信息，其效用自然不如后者，表现为前者的误判概率通常高于后者，而后者的误判概率才是我们真正感兴趣的。该缺陷将随着样本容量的增大而逐渐减弱，甚至可基本忽略。
+
+* 交叉验证法（或称刀切法）
+
+  - 使用的交叉验证实际上就是留一交叉验证（leave-one-out）。
+  
+  - 从组 $\pi_1$ 中取出 $x_{1j}$，用该组的其余 $n_1−j$ 个观测值和组 $\pi_2$ 中的 $n_2$ 个观测值构造判别函数，然后对组 $\pi_1$ 中取出的 $x_{1j}$ 进行判别，$j=1,2,\cdots,n_1$。
+  
+  - 同样，从组 $\pi_2$ 中取出 $x_{2j}$，用该组的其余 $n_2−j$ 个观测值和组 $\pi_1$ 中的 $n_1$ 个观测值构造判别函数，然后对组 $\pi_2$ 中取出的 $x_{2j}$ 进行判别，$j=1,2,\cdots,n_2$。
+  
+  - 总验证次数为 $n_1+n_2$。
+  
+  - 令 $n^{*}(2\mid 1)$ 为样本中来自 $\pi_1$ 但却误判为 $\pi_2$ 的样例个数，令 $n^{*}(1\mid 2)$ 为样本中来自 $\pi_2$ 但却误判为 $\pi_1$ 的样例个数，则两个误判概率 $P(2\mid 1)$ 和 $P(1\mid 2)$ 的估计量为：
+  
+$$\hat{P}(2 \mid 1)=\frac{n^{*}(2 \mid 1)}{n_{1}}, \quad \hat{P}(1 \mid 2)=\frac{n^{*}(1 \mid 2)}{n_{2}}$$  
+
+以上所述误判概率的这三种非参数估计方法同样适用于其它的判别方法或判别情形，并且可类似地推广到多组的情形。
+  
+### $\boldsymbol\Sigma_1\neq \boldsymbol\Sigma_2$ 的情况  
+ 
+当两个组别的协方差矩阵不相等时，不能使用上面的简化判别规则而只能使用一般判别规则，即
+
+$$\left\{\begin{array}{ll}
+\boldsymbol{x} \in \pi_{1}, & \text { 若 } d^{2}\left(\boldsymbol{x}, \pi_{1}\right) \leq d^{2}\left(\boldsymbol{x}, \pi_{2}\right) \\
+\boldsymbol{x} \in \pi_{2}, & \text { 若 } d^{2}\left(\boldsymbol{x}, \pi_{1}\right)>d^{2}\left(\boldsymbol{x}, \pi_{2}\right)
+\end{array}\right.$$
+
+也可采用另一种形式，即选择马氏距离的二次判别函数： 
+
+$$\begin{aligned}
+W(\boldsymbol{x}) &=d^{2}\left(\boldsymbol{x}, \pi_{1}\right)-d^{2}\left(\boldsymbol{x}, \pi_{2}\right) \\
+&=\left(\boldsymbol{x}-\boldsymbol{\mu}_{1}\right)^{\prime} \Sigma_{1}^{-1}\left(\boldsymbol{x}-\boldsymbol{\mu}_{1}\right)-\left(\boldsymbol{x}-\boldsymbol{\mu}_{2}\right)^{\prime} \Sigma_{2}^{-1}\left(\boldsymbol{x}-\boldsymbol{\mu}_{2}\right)
+\end{aligned}$$
+
+上式是关于 $x$ 的二次函数，相应的判别规则为：  
+
+$$\left\{\begin{array}{ll}
+\boldsymbol{x} \in \pi_{1}, & \text { 若 } W(\boldsymbol{x}) \leq 0 \\
+\boldsymbol{x} \in \pi_{2}, & \text { 若 } W(\boldsymbol{x})>0
+\end{array}\right.$$
+
+检验两个组别的协方差矩阵是否相同：
+
+* 使用程序包 multiUS 中的函数 BoxMTest。
+
+* 使用程序包 biotools 中的函数 BoxM。
+
+马氏距离判别：
+
+* 使用程序包 MASS 中的函数 lda 或 qda。
+
+* 使用程序包 biotools 中的函数 D2.disc。  
+
+### 两组距离判别示例
+
+对破产的企业收集它们在破产前两年的年度财务数据，同时对财务良好的企业也收集同一时期的数据。数据涉及四个变量：
+  
+* $x_1$：现金流量/总债务 
+
+* $x_2$：净收入/总资产
+
+* $x_3$：流动资产/流动债务
+
+* $x_4$：流动资产/净销售额
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/examp5.2.3.xlsx")
+  attach(what = mydf)
+
+# 检验两个组别的协方差矩阵是否相同：以下两条命令结果完全相同
+  
+  # 方法 1：如果任何一组的观测数量大于 20（足够大），将使用卡方检验，否则使用 F 检验
+  library(multiUS)
+  BoxMTest(X = mydf[, 1:4], cl = factor(x = mydf$g), alpha = 0.05, test = "any")
+  BoxMTest(X = mydf[, 1:4], cl = factor(x = mydf$g), alpha = 0.05, test = "F")
+  BoxMTest(X = mydf[, 1:4], cl = factor(x = mydf$g), alpha = 0.05, test = "Chisq")
+  
+  # 方法 2：使用卡方检验
+  library(biotools)
+  boxM(data = mydf[, 1:4], grouping = factor(x = mydf$g))
+
+  detach(name = mydf)
+
+```
+
+假设两个组别具有相同的协方差矩阵：使用线性判别规则
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 两组马氏距离的线性判别：使用线性判别函数 D2.disc，以列表形式返回结果
+  library(biotools)
+  mydf.lda <- D2.disc(data = mydf[, 1:4], grouping = mydf$g)
+  names(x = mydf.lda)
+  mydf.lda
+
+# 提取在变量 g 的水平上各个变量的均值
+  mydf.lda$means
+
+# 提取联合协方差矩阵
+  mydf.lda$pooled
+
+# 提取回测法中的预测值：以矩阵形式返回结果
+# X1：各个观测样例之间的马氏距离
+# X2：各个观测样例与所在组均值之间的马氏距离
+  mydf.lda$D2
+  
+# 提取回测法的混淆矩阵
+  mydf.lda$confusion.matrix
+  
+# 计算预测值：以列表形式返回结果
+  preds <- predict(object = mydf.lda, 
+                   newdata = data.frame(x1 = -0.16, x2 = -0.10, 
+                                        x3 = 1.45, x4 = 0.51))
+  names(x = preds)
+  preds
+  
+  detach(name = mydf)
+
+``` 
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 两组马氏距离的线性判别：使用线性判别函数 lda，以列表形式返回结果
+  library(MASS)
+  mydf.lda <- lda(g ~ ., data = mydf, CV = FALSE)
+  names(x = mydf.lda)
+  
+# 提取数据中的组别
+  mydf.lda$lev
+  
+# 提取数据中的总观测数量
+  mydf.lda$N
+
+# 提取各个组别的观测数量
+  mydf.lda$counts
+
+# 提取在变量 g 的水平上各个变量的均值
+  mydf.lda$means
+
+# 提取线性判别系数向量
+  mydf.lda$scaling
+
+# 计算回测法的混淆矩阵
+  preds <- predict(object = mydf.lda)
+  names(x = preds)
+  
+  DescTools::Conf(x = preds$class, ref = mydf$g)
+
+# 计算预测值
+  predict(object = mydf.lda, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```
+  
+上面的检验结果显示两个组别具有不同的协方差矩阵：使用二次判别规则
+  
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 两组马氏距离的二次判别：使用二次判别函数 qda，以列表形式返回结果
+  library(MASS)
+  mydf.qda <- qda(g ~ ., data = mydf)
+  mydf.qda
+
+# 计算回测法的混淆矩阵
+  preds <- predict(object = mydf.qda)
+  
+  library(DescTools)
+  Conf(x = preds$class, ref = mydf$g)
+
+# 计算预测值
+  predict(object = mydf.qda, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```
+
+## 基于平方马氏距离的判别：多组情形
+ 
+### 一般判别规则
+  
+设有 $k$ 个组别 $\boldsymbol{\pi_1},\boldsymbol{\pi_2},\ldots,\boldsymbol{\pi_k}$，它们的均值分别为 $\boldsymbol{\mu_1},\boldsymbol{\mu_2},\ldots,\boldsymbol{\mu_k}$，协方差矩阵分别为 $\boldsymbol{\Sigma_1},\boldsymbol{\Sigma_2},\ldots,\boldsymbol{\Sigma_k}$，则 $x$ 到总体 $\boldsymbol{\pi_i}$ 的平方马氏距离为：
+  
+$$d^{2}\left(\boldsymbol{x}, \pi_{i}\right)=\left(\boldsymbol{x}-\boldsymbol{\mu}_{i}\right)^{\prime} \Sigma_{i}^{-1}\left(\boldsymbol{x}-\boldsymbol{\mu}_{i}\right)$$
+
+判别规则为（该判别规则不受变量单位的影响）：
+
+$$\boldsymbol{x} \in \pi_{l}, \quad \text { 若 } d^{2}\left(\boldsymbol{x}, \pi_{l}\right)=\min _{1 \leq i \leq k} d^{2}\left(\boldsymbol{x}, \pi_{i}\right)$$
+
+### 各组协方差矩阵相等时分类规则的简化  
+
+当各组协方差矩阵相等时，分类规则简化为：
+
+如果 $\boldsymbol I^\prime_l{\boldsymbol x}+c_l=\text{min}(\boldsymbol I^\prime_i{\boldsymbol x}+c_i)$，那么 $\boldsymbol{x}\in\boldsymbol{\pi_l}$。  
+  
+其中：
+
+* $\boldsymbol I_i=\boldsymbol\Sigma^{-1}\boldsymbol\mu_i$
+
+* $c_i=-\frac{1}{2}\boldsymbol\mu^{\prime}_i\boldsymbol\Sigma^{-1}\boldsymbol\mu_i$ 
+ 
+* $\boldsymbol I^\prime_i{\boldsymbol x}+c_i$ 为线性判别函数。  
+
+### 各组协方差矩阵不全相等时的分类规则
+  
+当各个组别的协方差矩阵不全相等时，不能使用上面的简化判别规则而只能使用一般判别规则。
+
+## 距离判别分析的总结
+
+### 判别分类的前提条件
+
+* 除非各组均值向量之间有明显的差异，否则就不适合作判别分类。
+
+* 在各组数据满足一定的条件下，可先进行多元方差分析。
+
+  - 如果检验没有发现均值间有显著差异，则停止进行判别分类。
+
+  - 如果检验结果有显著差异，则可考虑再进行判别分类，但并不意味着所作的判别一定有效，最终还得看一下误判概率。
+  
+### 采用线性判别函数还是二次判别函数
+
+基于理论的策略：
+  
+* 当各组协方差矩阵相等时，采用线性判别函数。
+
+* 当各组协方差矩阵不全相等时，采用二次判别函数。但需要注意：
+
+  - 如果出现 $n_i<p$ 或 $n_i$ 略大于 $p$ 的情况时，应采用线性判别函数。
+
+两个简单且实用的策略：
+
+* 一般而言，如果各组的样本容量普遍较小，则选择线性判别函数。反之，如果各组的样本容量都非常大，则更倾向于采用二次判别函数。
+
+* 如果对使用线性判别函数还是二次判别函数拿不准，可以同时采用这两种方法分别进行判别，然后用交叉验证法来比较其误判概率的大小，以确定到底采用哪种方法更为合适。
+
+* 以上策略同样适用于其它的判别方法。
+
+### 多组距离判别示例  
+
+电视机品牌调查分析
+
+```{r}
+
+# 读取数据
+  sales <- rio::import(file = "Data/sale.csv")
+  attach(what = sales)  
+
+# 检验各组的协方差阵是否存在显著差异
+  library(biotools)
+  boxM(data = sales[, 2:4], grouping = factor(x = Group))  
+
+  detach(name = sales)
+
+```
+
+由于各组的协方差阵不存在显著差异，因此使用线性判别函数。
+
+```{r}
+
+# 读取数据
+  attach(what = sales)  
+  
+# 多组平方马氏距离判别：使用线性判别函数 D2.disc，以列表形式返回结果
+  library(biotools)
+  sales.lda <- D2.disc(data = sales[, 2:4], grouping = Group)  
+  sales.lda
+
+# 提取在组别 Group 的各个水平上各个变量的均值
+  sales.lda$means
+
+# 提取联合协方差矩阵
+  sales.lda$pooled
+
+# 提取回测法的预测值
+  sales.lda$D2
+
+# 提取回测法的混淆矩阵
+  sales.lda$confusion.matrix
+
+# 计算预测值：以列表形式返回结果
+  predict(object = sales.lda, 
+          newdata = data.frame(quality = 8, performance = 7.5, price = 65))
+  
+  detach(name = sales)
+
+```
+  
+```{r}
+
+# 读取数据
+  attach(what = sales)
+
+# 多组平方马氏距离判别：使用线性判别函数 ldaPlus，以列表形式返回结果
+  library(multiUS)
+  sales.lda <- ldaPlus(x = sales[, 2:4], grouping = Group, pred = TRUE,
+                       CV = TRUE)
+  names(x = sales.lda)
+  sales.lda
+  
+# 提取回测法的混淆矩阵
+  sales.lda$class
+
+# 提取交叉验证的混淆矩阵
+  sales.lda$classCV
+
+# 计算预测值：以列表形式返回结果
+  predict(object = sales.lda, 
+          newdata = data.frame(quality = 8, performance = 7.5, price = 65))
+  
+  detach(name = sales)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = sales)
+
+# 多组平方马氏距离判别：使用线性判别函数 lda，以列表形式返回结果  
+  library(MASS)
+  sales.lda <- lda(Group ~ ., data = sales, method = "moment", CV = FALSE)  
+  names(x = sales.lda)
+
+# 提取线性判别函数系数
+  sales.lda$scaling  
+
+# 计算回测法的预测值
+  preds <- predict(object = sales.lda)
+  results <- data.frame(Group, predictions = preds$class)
+  results
+
+# 计算回测值的混淆矩阵
+  library(DescTools)
+  Conf(x = preds$class, ref = sales$Group)
+
+# 计算预测值：以列表形式返回结果
+  predict(object = sales.lda, 
+          newdata = data.frame(quality = 8, performance = 7.5, price = 65))
+  
+  detach(name = sales)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = sales)
+
+# 多组平方马氏距离判别：使用二次判别函数 qda，以列表形式返回结果
+  library(MASS)
+  sales.qda <- qda(Group ~ ., data = sales, method = "moment")
+  sales.qda
+
+# 计算回测法的混淆矩阵
+  library(DescTools)
+  Conf(x = predict(object = sales.qda)$class, ref = sales$Group)
+  
+# 计算预测值：以列表形式返回结果
+  predict(object = sales.qda, 
+          newdata = data.frame(quality = 8, performance = 7.5, price = 65))
+
+  detach(name = sales)
+
+```
+
+## 贝叶斯判别：最大后验概率法  
+
+### 最大后验概率法的定义
+ 
+设有 $k$ 个组 $\pi_i, i=1,2,\cdots,k$ 且组 $\pi_i$ 的概率密度为 $f_i(x)$，样例 $x$ 来自组 $\pi_i$ 的先验概率为 $p_i$，满足 $p_1+p_2+\cdots+p_k=1$。则样例 $x$ 属于 $\pi_i$ 的后验概率为： 
+  
+$$P\left(\pi_{i} \mid \boldsymbol{x}\right)=\frac{p_{i} f_{i}(\boldsymbol{x})}{\sum_{j=1}^{k} p_{j} f_{j}(\boldsymbol{x})}, \quad i=1,2, \cdots, k$$  
+
+最大后验概率法的判别规则为：将样例判别为后验概率最大的组别。  
+
+$$\boldsymbol{x} \in \pi_{l}, \quad \text { 若 } P\left(\pi_{l} \mid \boldsymbol{x}\right)=\max _{1 \leq i \leq k} P\left(\pi_{i} \mid \boldsymbol{x}\right)$$
+
+### 皆为正态组的情形
+  
+设各个组别 $\boldsymbol{\pi_i}$ 均服从均值向量为 $\boldsymbol{\mu_i}$、协方差矩阵为 $\boldsymbol{\Sigma_i}$ 的多元正态分布、组 $\boldsymbol{\pi_i}$ 的概率密度为：
+
+$$f_{i}(\boldsymbol{x})=(2 \pi)^{-p / 2}\left|\boldsymbol{\Sigma}_{i}\right|^{-1 / 2} \exp \left[-0.5 d^{2}\left(\boldsymbol{x}, \pi_{i}\right)\right]$$
+
+其中，$d^2(x,\boldsymbol{\pi_i})$ 是样例 $x$ 到 $\boldsymbol{\pi_i}$ 的平方马氏距离。
+  
+$$d^{2}\left(\boldsymbol{x}, \pi_{i}\right)=\left(\boldsymbol{x}-\boldsymbol{\mu}_{i}\right)^{\prime} \Sigma_{i}^{-1}\left(\boldsymbol{x}-\boldsymbol{\mu}_{i}\right)$$
+
+后验概率为：
+  
+$$P\left(\pi_{i} \mid \boldsymbol{x}\right)=\frac{p_{i} f_{i}(\boldsymbol{x})}{\sum_{j=1}^{k} p_{j} f_{j}(\boldsymbol{x})}=\frac{\exp \left[-\frac{1}{2} D^{2}\left(\boldsymbol{x}, \pi_{i}\right)\right]}{\sum_{j=1}^{k} \exp \left[-\frac{1}{2} D^{2}\left(\boldsymbol{x}, \pi_{j}\right)\right]}, \quad i=1,2, \cdots, k$$  
+
+其中，$D^2(x,\boldsymbol{\pi_i})=d^2(x,\boldsymbol{\pi_i})+g_i+h_i$ 是样例 $x$ 到 $\boldsymbol{\pi_i}$ 的广义平方马氏距离。
+  
+$$g_{i}=\left\{\begin{array}{ll}
+\ln \left|\Sigma_{i}\right|, & \text { 若 } \Sigma_{1}, \Sigma_{2}, \cdots, \Sigma_{k} \text { 不全相等 } \\
+0, & \text { 若 } \Sigma_{1}=\Sigma_{2}=\cdots=\Sigma_{k}=\Sigma
+\end{array}\right.$$
+
+$$h_{i}=\left\{\begin{array}{ll}
+-2 \ln p_{i}, & \text { 若 } p_{1}, p_{2}, \cdots, p_{k} \text { 不全相等 } \\
+0, & \text { 若 } p_{1}=p_{2}=\cdots=p_{k}=\frac{1}{k}
+\end{array}\right.$$
+
+* 当 $p_1=p_2=\cdots=p_k=1/k$ 且各组的协方差矩阵 $\boldsymbol{\Sigma_i}$ 都相等时，上面的后验概率简化为：
+
+$$P\left(\pi_{i} \mid \boldsymbol{x}\right)=\frac{\exp \left(\boldsymbol{I}_{i}^{\prime} \boldsymbol{x}+c_{i}+\ln p_{i}\right)}{\sum_{j=1}^{k} \exp \left(\boldsymbol{I}_{j}^{\prime} \boldsymbol{x}+c_{j}+\ln p_{j}\right)}, \quad i=1,2, \cdots, k$$
+
+此时，最大后验概率法的判别规则等价于距离判别。
+
+如果我们对样例 $x$ 来自哪一组的先验信息一无所知或难以确定，则一般可取 $p_1=p_2=\cdots=p_k=1/k$。
+
+贝叶斯最大后验概率法的计算使用程序包 MASS 中的函数 lda 或 qda。
+
+* 函数 lda 适用于等协方差矩阵的情况，函数 qda 适用于协方差矩阵不全相等的情况。
+
+### 贝叶斯最大后验概率法示例
+
+**假定两组皆为正态组，各个组别的协方差矩阵全相等且先验概率也全相等的情况：使用线性贝叶斯判别**  
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/examp5.2.3.csv")
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：首选方法
+  library(multiUS)
+  mydf.maxprob <- ldaPlus(x = mydf[, 1:4], grouping = mydf$g, pred = TRUE, 
+                          CV = TRUE, usePriorBetweenGroups = TRUE, 
+                          prior = c(0.5, 0.5))
+  names(x = mydf.maxprob)
+  mydf.maxprob
+
+# 提取先验概率
+  mydf.maxprob$prior
+
+# 提取回测法预测概率与预测类别
+  preds <- mydf.maxprob$pred
+  
+  # 后验概率
+  head(x = preds$posterior, n = 3)
+  
+  # 预测类别
+  preds$class
+
+# 提取回测法的混淆矩阵
+  mydf.maxprob$class
+  
+# 提取回测法的交叉验证混淆矩阵
+  mydf.maxprob$classCV
+
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：方法 2
+  library(MASS)
+  mydf.maxprob <- lda(g ~ ., data = mydf, prior = c(1, 1)/2, method = "moment")
+  names(x = mydf.maxprob)
+  
+# 提取先验概率
+  mydf.maxprob$prior  
+
+# 提取回测法预测概率与预测类别
+  preds <- predict(object = mydf.maxprob)
+  head(x = preds$posterior, n = 3)
+  head(x = preds$class)
+  
+# 计算回测法的混淆矩阵
+  DescTools::Conf(x = preds$class, ref = mydf$g)
+  
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))  
+  
+  detach(name = mydf)
+
+```
+
+**假定两组皆为正态组，各个组别的协方差矩阵全相等且使用给定的先验概率：使用线性贝叶斯判别**  
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：首选方法
+  library(multiUS)
+  mydf.maxprob <- ldaPlus(x = mydf[, 1:4], grouping = mydf$g, pred = TRUE, 
+                          CV = TRUE, usePriorBetweenGroups = TRUE, 
+                          prior = c(0.1, 0.9))
+  mydf.maxprob
+
+# 提取先验概率
+  mydf.maxprob$prior
+
+# 计算回测法的后验概率与预测类别
+  preds <- mydf.maxprob$pred
+  
+  # 后验概率
+  head(x = preds$posterior, n = 3)
+  
+  # 预测类别
+  head(x = preds$class, n = 3)
+  
+# 计算回测法的混淆矩阵
+  mydf.maxprob$class
+  
+# 计算交叉验证的混淆矩阵
+  mydf.maxprob$classCV
+
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51)) 
+  
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：方法 2
+  library(MASS)
+  mydf.maxprob <- lda(g ~ ., data = mydf, prior = c(0.1, 0.9), method = "moment")
+  mydf.maxprob
+
+# 计算回测法预测概率与预测分类
+  preds <- predict(object = mydf.maxprob)
+  head(x = preds$posterior, n = 3)
+  head(x = preds$class, n = 3)
+
+# 计算回测值的混淆矩阵
+  DescTools::Conf(x = preds$class, ref = mydf$g)
+
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```
+
+**假定两组皆为正态组，各个组别的协方差矩阵全相等且使用样本比例作为先验概率：使用线性贝叶斯判别**  
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：首选方法
+  library(multiUS)
+  mydf.maxprob <- ldaPlus(x = mydf[, 1:4], grouping = mydf$g, pred = TRUE, 
+                          CV = TRUE, usePriorBetweenGroups = TRUE, 
+                          prior = as.vector(x = prop.table(x = table(mydf$g))))  
+  mydf.maxprob  
+
+# 计算回测法的后验概率与预测类别
+  preds <- mydf.maxprob$pred
+  head(x = preds$posterior, n = 3)
+  head(x = preds$class, n = 3)
+  
+# 提取回测法的混淆矩阵
+  mydf.maxprob$class
+
+# 提取交叉验证的混淆矩阵
+  mydf.maxprob$classCV
+  
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```  
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：方法 2
+  library(MASS)
+  mydf.maxprob <- lda(g ~ ., data = mydf)
+  mydf.maxprob
+  
+# 计算回测法的后验概率与预测类别
+  preds <- predict(object = mydf.maxprob)
+  head(x = preds$posterior, n = 3)
+  head(x = preds$class, n = 3)
+
+# 计算回测法的混淆矩阵
+  DescTools::Conf(x = preds$class, ref = mydf$g) 
+
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```    
+  
+**假定两组皆为正态组，各个组别的协方差矩阵不全相等但先验概率全相等的情况：使用二次贝叶斯判别**  
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：先验概率相等但协方差矩阵不全相等
+  library(MASS)
+  mydf.maxprob <- qda(g ~ ., data = mydf, prior = c(0.5, 0.5),
+                      method = "moment", CV = FALSE)
+  names(x = mydf.maxprob)
+  mydf.maxprob
+
+  # 提取先验概率
+  mydf.maxprob$prior
+
+# 计算回测法的后验概率与预测类别
+  preds <- predict(object = mydf.maxprob)
+  head(x = preds$class, n = 3)
+  head(x = preds$posterior, n = 3)
+
+# 计算回测法的混淆矩阵
+  DescTools::Conf(x = preds$class, ref = mydf$g)
+
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```
+
+**假定两组皆为正态组，各个组别的协方差矩阵不全相等并且使用给定的先验概率：使用二次贝叶斯判别**  
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：使用给定先验概率
+  library(MASS)
+  mydf.maxprob <- qda(g ~ ., data = mydf, prior = c(0.1, 0.9), 
+                      method = "moment", CV = FALSE)  
+  names(x = mydf.maxprob)
+
+  # 提取先验概率
+  mydf.maxprob$prior
+  
+# 计算回测法的后验概率与预测类别
+  preds <- predict(object = mydf.maxprob)
+  head(x = preds$class, n = 3)
+  head(x = preds$posterior, n = 3)
+
+# 计算回测法的混淆矩阵
+  DescTools::Conf(x = preds$class, ref = mydf$g)
+
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```
+
+**假定两组皆为正态组，各个组别的协方差矩阵不全相等并且使用样本比例做先验概率：使用二次贝叶斯判别**  
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 贝叶斯最大后验概率法：使用样本比例做先验概率
+  library(MASS)
+  props <- as.vector(x = proportions(x = table(g, useNA = "ifany")))
+  mydf.maxprob <- qda(g ~ ., data = mydf, prior = props, method = "moment")
+  mydf.maxprob
+
+# 计算回测法的后验概率与预测类别
+  preds <- predict(object = mydf.maxprob)
+  head(x = preds$class, n = 3)
+  head(x = preds$posterior, n = 3)
+  
+# 计算回测法的混淆矩阵
+  DescTools::Conf(x = preds$class, ref = mydf$g)
+  
+# 计算新样本的预测值
+  predict(object = mydf.maxprob, 
+          newdata = data.frame(x1 = -0.16, x2 = -0.10, x3 = 1.45, x4 = 0.51))
+
+  detach(name = mydf)
+
+```
+
+## 贝叶斯判别：最小期望误判代价法
+  
+### 最大后验概率法不适用的示例  
+  
+令 $\pi_1$ 为合格的药，$\pi_2$ 为不合格的药，对于新样例 $x$ 有 $P\left(\pi_{1} \mid \boldsymbol{x}\right)=0.6, \quad P\left(\pi_{2} \mid \boldsymbol{x}\right)=0.4$。
+  
+该问题中，两种误判造成的损失明显是不同的，只是根据后验概率的大小进行判别是不合适的。
+
+### 两组的一般情形
+  
+设组 $\boldsymbol{\pi_1}$ 和 $\boldsymbol{\pi_2}$ 的概率密度分别为 $f_1(x)$ 和 $f_2(x)$，组 $\boldsymbol{\pi_1}$ 和 $\boldsymbol{\pi_2}$ 的先验概率分别为 $p_1$ 和 $p_2$ 且 $p_1+p_2=1$。误判代价矩阵为：
+
+```{r}
+
+# 误判代价矩阵
+  img <- readPNG(source = "Pictures/误判代价矩阵.png")
+  grid.raster(image = img, name = "误判代价矩阵")
+
+``` 
+  
+* 在按给定的判别规则对新样例 $x$ 进行判别时，其误判代价 $c(l\mid i)$ 是一个随机变量，因为 $c(l\mid i)$ 是随机变量 $i$ 和 $l$ 的函数。
+
+* 平均或期望误判代价(expected cost of misclassification)，记为 ECM：
+
+$$\text{ECM}=E[c(l\mid i)]=c(2\mid 1){p_1}{P(2\mid 1)}+c(1\mid 2){p_2}{P(1\mid 2)}$$
+
+  - 给定了判别规则，误判概率 $P(2|1)$ 和 $P(1|2)$ 就可算出，由于先验概率 $p_1$ 和 $p_2$ 是事先给定的，从而就可计算得出 ECM。
+
+* 最小期望误判代价法采用的是使 ECM 达到最小的判别规则：
+
+$$\left\{\begin{array}{ll}
+\boldsymbol{x} \in \pi_{1}, & \text { 若 } \frac{f_{1}(\boldsymbol{x})}{f_{2}(\boldsymbol{x})} \geq \frac{c(1 \mid 2) p_{2}}{c(2 \mid 1) p_{1}} \\
+\boldsymbol{x} \in \pi_{2}, & \text { 若 } \frac{f_{1}(\boldsymbol{x})}{f_{2}(\boldsymbol{x})}<\frac{c(1 \mid 2) p_{2}}{c(2 \mid 1) p_{1}}
+\end{array}\right.$$  
+  
+### 两组的一些特殊情形
+
+* 当 $p_1=p_2=0.5$ 时，判别规则可简化为：
+ 
+$$\left\{\begin{array}{ll}
+\boldsymbol{x} \in \pi_{1}, & \text { 若 } \frac{f_{1}(\boldsymbol{x})}{f_{2}(\boldsymbol{x})} \geq \frac{c(1 \mid 2)}{c(2 \mid 1)} \\
+\boldsymbol{x} \in \pi_{2}, & \text { 若 } \frac{f_{1}(\boldsymbol{x})}{f_{2}(\boldsymbol{x})}<\frac{c(1 \mid 2)}{c(2 \mid 1)}
+\end{array}\right.$$  
+
+  - 实践中，如果先验概率难以给出，则它们通常被取成相等。  
+
+* 当 $c(1|2)= c(2|1)$ 时，判别规则可简化为：
+
+$$\left\{\begin{array}{ll}
+\boldsymbol{x} \in \pi_{1}, & \text { 若 } P\left(\pi_{1} \mid \boldsymbol{x}\right) \geq P\left(\pi_{2} \mid \boldsymbol{x}\right) \\
+\boldsymbol{x} \in \pi_{2}, & \text { 若 } P\left(\pi_{1} \mid \boldsymbol{x}\right)<P\left(\pi_{2} \mid \boldsymbol{x}\right)
+\end{array}\right.$$
+
+  - 实践中，若误判代价比无法确定则它们通常被取成相等，即取比值为 1。此时，最小期望误判代价法等价于最大后验概率法。
+  
+* 当 $p_1=p_2=0.5$ 且 $c(1|2)= c(2|1)$ 时，判别规则可简化为：
+  
+$$\left\{\begin{array}{ll}
+\boldsymbol{x} \in \pi_{1}, & \text { 若 } f_{1}(\boldsymbol{x}) \geq f_{2}(\boldsymbol{x}) \\
+\boldsymbol{x} \in \pi_{2}, & \text { 若 } f_{1}(\boldsymbol{x})<f_{2}(\boldsymbol{x})
+\end{array}\right.$$
+ 
+  - 此时，只需要比较样例在两个组别上的概率密度的大小即可。 
+  
+### 两个正态组的情形
+
+* 在两组皆为正态组且协差阵相等的情形下，最小期望误判代价法等价于协方差矩阵相等的距离判别规则，且可使两个误判概率之和或平均误判概率达到最小。
+
+### 多组的情形
+
+对于多组别的情况，使 ECM 达到最小的判别规则为：
+  
+$$\boldsymbol{x} \in \pi_{l} \text {, 若 } \sum_{\substack{j=1 \\ j \neq l}}^{k} p_{j} c(l \mid j) f_{j}(\boldsymbol{x})=\min _{\substack{1 \leq i \leq k}} \sum_{\substack{j=1 \\ j \neq i}}^{k} p_{j} c(i \mid j) f_{j}(\boldsymbol{x})$$
+
+* 如果所有组别的误判代价都是相同的，则此时判别规则可简化为：
+  
+$$\boldsymbol{x} \in \pi_{l}, \quad \text { 若 } p_{l} f_{l}(\boldsymbol{x})=\max _{1 \leq i \leq k} p_{i} f_{i}(\boldsymbol{x})$$
+  
+  - 它等价于最大后验概率法的判别规则。
+ 
+* 如果所有组别的误判代价以及先验概率都是相同的，则此时判别规则可简化为：
+  
+$$\boldsymbol{x} \in \pi_{l}, \quad \text { 若 } f_{l}(\boldsymbol{x})=\max _{1 \leq i \leq k} f_{i}(\boldsymbol{x})$$ 
+
+### 贝叶斯判别与距离判别的比较
+
+* 贝叶斯判别考虑到了先验概率和误判代价，而距离判别没有此考虑，也不涉及密度。前者较为精细，且可给出最优判别规则；而后者相对粗糙，但主要优点是简单、直观，且没什么假定。
+
+* 在不考虑先验概率和误判代价的情形下（相当于都取成相等），当各组协差阵相同时，各组正态性假定下的贝叶斯判别等价于距离判别。
+
+* 在判别分类中，无论在理论上还是应用上，贝叶斯判别都居主导地位，其重要性明显在距离判别之上。
+  
+```{r}
+
+# 读取数据
+  data("response", package = "CustomerScoringMetrics")
+  attach(what = response)
+
+# 计算期望误判代价 ECM：以列表形式返回结果
+  library(CustomerScoringMetrics)
+  emc <- expMisclassCost(predTest = response$test[, 2], 
+                         depTest = response$test[, 1],
+                         costType = "costRatio", costs = 5, 
+                         cutoff = 0.5, dyn.cutoff = FALSE)
+  names(x = emc)  
+  print(x = emc$EMC)
+
+  detach(name = response)
+
+```
+
+```{r}
+
+# 双总体最小 ECM 贝叶斯判别函数
+  discriminant.bayes <- function(TrnX1, TrnX2, rate = 1, TstX = NULL,
+                                 var.equal = FALSE){
+    if (is.null(TstX) == TRUE) TstX <- rbind(TrnX1,TrnX2)
+    if (is.vector(TstX) == TRUE) TstX <- t(as.matrix(TstX))
+    else if (is.matrix(TstX) != TRUE)
+      TstX <- as.matrix(TstX)
+    if (is.matrix(TrnX1) != TRUE) TrnX1 <- as.matrix(TrnX1)
+    if (is.matrix(TrnX2) != TRUE) TrnX2 <- as.matrix(TrnX2)
+  
+  nx <- nrow(TstX)
+  blong <- matrix(rep(0, nx), nrow = 1, byrow = TRUE, 
+                  dimnames = list("blong", 1:nx))
+  mu1 <- colMeans(TrnX1); mu2 <- colMeans(TrnX2)
+  
+  if (var.equal == TRUE || var.equal == T){
+    S <- var(rbind(TrnX1, TrnX2))
+    beta <- 2 * log(rate)   # W 前面的1/2乘到 beta 上面去了
+    W <- mahalanobis(TstX,mu2,S) - mahalanobis(TstX, mu1, S)
+    }
+  else{
+    S1 <- var(TrnX1); S2 <- var(TrnX2)
+    beta <- 2*log(rate) + log(det(S1)/det(S2))
+    W <- mahalanobis(TstX, mu2, S2) - mahalanobis(TstX, mu1, S1)
+    }
+  
+  for (i in 1:nx){
+    if (W[i] > beta)
+      blong[i] <- 1
+    else
+      blong[i] <- 2
+  }
+  
+  blong
+  }
+
+```
+
+说明：
+
+* 参数 TrnX1 与 Trnx2 分别表示 X1 类、X2 类训练样本，其传入格式是数据框，或矩阵（样本按行输入）。
+
+* 参数 $\text{rate}=\frac{L(1|2)}{L(2|1)} \cdot \frac{p_1}{p_2}$，默认设置为 1。
+
+* 参数 TstX 是待测样本，其传入格式是数据框，或矩阵（样本按行输入），或向量（一个待测样本）。
+
+  - 如果不输入 TstX（默认设置），则待测样本为两个训练样本之和，即计算训练样本的回测值。
+  
+* 参数 var.equal 是逻辑变量，var.equal = TRUE 表示认为两总体的协方差阵是相同的，var.equal = FALSE（默认设置）表示认为两总体的协方差阵是不同的。
+
+* 函数的输出是由"1"和"2"构成的的一维矩阵，"1"表示待测样本属于 X1 类，"2"表示待测样本属于 X2 类。
+
+```{r}
+
+# 多总体最小 ECM 准则贝叶斯分类函数
+
+  distinguish.bayes <- function(TrnX, TrnG, p = rep(1, length(levels(TrnG))),
+                                TstX = NULL, var.equal =FALSE){
+    if (is.factor(TrnG) == FALSE){
+      mx <- nrow(TrnX); mg <- nrow(TrnG)
+      TrnX <- rbind(TrnX, TrnG)
+      TrnG <- factor(rep(1:2, c(mx, mg)))
+    }
+    
+    if (is.null(TstX) == TRUE) TstX <- TrnX
+    if(is.vector(TstX) == TRUE) TstX <- t(as.matrix(TstX))
+    else if (is.matrix(TstX) != TRUE)
+      TstX <- as.matrix(TstX)
+    if (is.matrix(TrnX) != TRUE) TrnX <- as.matrix(TrnX)
+    
+    nx <- nrow(TstX)
+    blong <- matrix(0, nrow = 1,ncol = nx, dimnames = list("blong", 1:nx))
+    g <- length(levels(TrnG))
+    mu <- matrix(0, nrow = g, ncol = ncol(TrnX))
+    
+    for (i in 1:g)
+      mu[i, ] <- colMeans(TrnX[TrnG == i, ])
+    D <- matrix(0, nrow = g, ncol = nx)  
+    
+    if (var.equal == TRUE || var.equal == T){
+      for (i in 1:g){
+        d2 <- mahalanobis(TstX, mu[i, ], var(TrnX))
+        D[i, ] <- d2 - 2*log(p[i])
+      }
+    }
+    
+    else{
+      for (i in 1:g){
+        S <- var(TrnX[TrnG == i, ])
+        d2 <- mahalanobis(TstX, mu[i, ], S)
+        D[i,] = d2 - 2*log(p[i]) - log(det(S))
+      }
+    }
+    
+    for (j in 1:nx){
+      dmin <- Inf
+      for (i in 1:g){
+        if (D[i,j] < dmin){
+          dmin <- D[i,j]; blong[j] <- i
+        }
+      }
+      }
+    blong
+  }
+
+```
+
+说明：
+
+* 函数分别考虑了总体协方差阵相同和协方差阵不同的情况。
+
+* 参数 Trnx表示训练样本，其传入格式是矩阵（样本按行输入），或数据框。
+
+* 参数 TrnG 是因子型变量，表示训练样本的分类情况。
+
+* 参数 $p$ 是先验概率，缺省值均为 $1$。
+
+* 参数 TstX 是待测样本，其传入格式是矩阵（样本按行输入），或数据框，或向量（一个待测样本）。
+  
+  - 如果不传入 TstX（默认设置），则待测样本为训练样本。
+  
+* 参数 var.equal 是逻辑变量，var.equal = TRUE 表示认为总体协方差阵是相同的，var.equal = FALSE（默认设置）表示认为总体协方差阵不是全部相同的。
+
+* 函数的输出是由数值构成的的一维矩阵，数值表示相应的类。
+
+## Fisher 判别
+
+### Fisher 判别的基本思想
+  
+Fisher 判别（Fisher discriminant analysis, FDA）也称典型判别（canonical discriminant），其基本思想是投影（或降维）。
+
+* Fisher 判别是用 $p$ 维向量 $x=(x_1,x_2,\ldots,x_p)^{\prime}$ 中的少数几个变量的线性组合（称为费希尔判别函数或典型变量，一般 $r$ 明显小于 $p$）来代替原始的 $p$ 个变量，从而实现降维的目的，并根据这 $r$ 个判别函数 $y_1,y_2,\ldots,y_r$ 对样本中观测样例的归属作出判别分类或对各组别进行分离。
+
+$$y_1=a_1^\prime {x},\;y_2=a_2^\prime {x},\;\ldots,\; y_r=a_r^\prime {x}$$
+ 
+在对原始的 $p$ 维向量成功地降至二维或三维后，就可以针对降维后的数据（也称得分）绘制散点图，从直观的几何图形上区分各个组别。
+  
+### 一个说明性的二维示例  
+
+```{r}
+
+# 两类别 Fisher 线性判别分析
+  img <- readPNG(source = "Pictures/两类别FIsher判别分析.png")
+  grid.raster(image = img, name = "两类别 Fisher 线性判别分析")
+
+```  
+
+### Fisher 判别函数
+
+设来自组 $\pi_i$ 的 $p$ 维观测值为 $x_{ij},\quad j=1,2,\ldots,n_i,\quad i=1,2,\ldots,k$，$k$ 是组别的数量。记：
+
+* 组间矩阵为：
+
+$$H=\sum_{i=1}^{k}n_i{(\overline{X_i} - \overline{X})} {(\overline{X_i} - \overline{X})^\prime}$$
+  
+  - 组间矩阵反映了各组之间的变异程度。  
+
+* 组内矩阵为：
+ 
+$$E=\sum_{i=1}^{k}{(n_i-1)}S_i$$  
+  
+  - 组内矩阵反映了组内观测样例之间的变异程度。  
+  
+* 协方差矩阵 $\Sigma$ 的联合无偏估计为：
+  
+$$S_p=\frac{E}{n-k}$$
+  
+* Fisher 判别需要假定各个组别之间具有相同的协方差阵：$\boldsymbol{\Sigma_1}=\boldsymbol{\Sigma_2}=\cdots=\boldsymbol{\Sigma}$。 
+
+  - 检验各个组别之间是否具有相同的协方差阵，使用程序包 multiUS 中的函数 BoxMTest 或程序包 biotools 中的函数 boxM。 
+  
+设 $E^{-1}H$ 的全部正特征值依次为 $\lambda_1\geq\lambda_2\geq\cdots\geq\lambda_s>0$，$s=\text{rank}(H)$ 且有 $s\leq\text{min}(k-1,p)$，相应的特征向量依次记为 $t_1,t_2,\cdots,t_s$，则称 $y_{i}=t_i^{\prime}x$ 为 Fisher 第 $i$ 线性判别函数或第 $i$ 典型变量，简称第 $i$ 判别函数。
+
+* 通常情况下，取 $s=k-1$。
+
+* $\lambda_i$ 表示 $y_i$ 对分离各组的贡献大小，也就是 $y_i$ 代表全部 $y_1,y_2,\cdots,y_s$ 进行判别的能力。$y_i$ 在所有 $s$ 个判别函数中的贡献率为：
+
+$$\lambda_i/\Sigma_{j=1}^s(\lambda_j)$$
+ 
+  - 可见，$y_1,y_2,\cdots,y_s$ 对分离各组的贡献依次递减。 
+  
+  - 在实际应用中，如果前 $r$ 个判别函数的累计贡献率已达到了一个较高的比例，则就采用这 $r$ 个判别函数进行判别。
+
+### Fisher 判别函数的特点
+ 
+* 各判别函数都具有单位（联合样本）方差。
+
+* 各判别函数彼此之间不相关，也就是彼此之间的联合样本协方差为零。
+
+* 判别函数在方向上并不是彼此正交的，但作图时仍将它们画成直角坐标系，虽有些变形，但通常并不严重。
+
+* 判别函数不受变量度量单位的影响。
+  
+* 各个组别如能在前几个判别函数构成的低维空间中得到较好的分离，那么在原始变量的更高维空间中一般也会得到较好的分离，但反之未必。
+
+* 费希尔判别虽是一种很好的降维投影方法，但该方法也有其不适用的场合。如，Fisher 判别函数不适用于非线性的情况。
+
+```{r}
+
+# Fisher 线性判别
+  img <- readPNG(source = "Pictures/Fisher 不适合非线性.png")
+  grid.raster(image = img)
+
+```
+  
+### Fisher 判别规则：两组情形
+  
+判别规则是用来判别分类的。
+
+**两组情形**
+
+* 对于两组的判别，Fisher 判别函数只有一个。
+
+* 两组的 Fisher 判别等价于协方差矩阵相等的距离判别。
+
+* 如果两个组别服从多元正态分布，那么 Fisher 判别还等价于协方差矩阵相等且先验概率和误判代价也均相同的贝叶斯判别。
+
+* 多组的 Fisher 判别规则在实践中很少采用。
+
+### Fisher 判别规则：一般情形
+  
+由于各判别函数都具有单位方差且彼此不相关，故此时的马氏距离等同于欧氏距离，此时可采用距离判别法。
+
+### Fisher 判别函数得分图
+
+* 判别函数得分图既可用于分类也可用于分离，但主要用于分离。
+
+* 为作图的目的，一般取 $r=2$，偶尔取 $r=3$。
+
+* 当取 $r=2$ 时，可将各个观测对象的两个判别函数得分画成平面直角坐标系上的散点图，用目测法对新样品的归属进行辨别或对来自各组样品的分离情况及结构进行观测评估。
+
+* 当 $r=3$ 时，可作（三维）旋转图从多角度来辨别新样品的归属或观测评估各组之间的分离效果，但其目测效果一般明显不如 $r=2$ 时清楚。
+
+* 能够利用降维后生成的图形进行直观判别是 Fisher 判别的最重要应用，图中常常能清晰地展示出丰富的信息，如发现构成各组的结构、离群观测样例点或数据中的其他异常情况等。
+
+在 R 中，计算 Fisher 线性判别分析可使用的方法：
+
+* 程序包 MASS 中的函数 lda
+
+* 程序包 multiUS 中的函数 ldaPlus
+
+* 程序包 robCompositions 中的函数 daFisher：主要用于计算组间方差矩阵、组内方差矩阵、绘制典型变量得分图。
+
+### Fisher 线性判别示例
+
+Fisher 于 1936 年发表的鸢尾花（Iris）数据是对 3 种鸢尾花：刚毛鸢尾花（第 Ⅰ 组）、变色鸢尾花（第 Ⅱ 组）和弗吉尼亚鸢尾花（第 Ⅲ组 ）各抽取一个容量为 50 的样本，测量其花萼长（SL）、花萼宽（SW）、花瓣长（PL）、花瓣宽（PW），单位为 mm。
+
+```{r}
+
+# 读取数据
+  iris_examp <- rio::import("Data/examp5.4.1.csv")
+  attach(what = iris_examp)
+
+# 检验各个组别之间是否具有相同的协方差
+  library(biotools)
+  boxM(data = iris_examp[, 1:4], grouping = factor(x = Species))
+
+  detach(name = iris_examp)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = iris_examp)
+
+# Fisher 线性判别分析：首选方法，以列表形式返回结果
+  library(multiUS)
+  iris_fisher <- ldaPlus(x = iris_examp[, 1:4], grouping = Species, pred = TRUE,
+                         CV = TRUE)
+  names(x = iris_fisher)
+
+  # 提取特征根与典型相关系数
+  iris_fisher$eigModel
+
+  # 提取典型变量的得分系数
+  iris_fisher$scaling
+
+  # 提取判别函数的组内标准化得分系数
+  iris_fisher$standCoefWithin
+
+  # 提取判别函数的标准化得分系数
+  iris_fisher$standCoefTotal
+
+  # 提取典型相关系数的显著性检验
+  iris_fisher$sigTest
+
+  # 提取质心
+  iris_fisher$centroids
+  
+  # 提取回测预测结果：以列表形式返回结果
+  preds <- iris_fisher$pred
+  names(x = preds)
+  
+# 绘制典型变量得分图
+  ggplot(data = as.data.frame(x = preds$x), mapping = aes(x = LD1, y = LD2)) +
+    geom_point(mapping = aes(color = preds$class)) +
+    labs(x = "第一典型变量", y = "第二典型变量", title = "典型变量得分图") +
+    theme_bw()
+
+# 提取回测混淆矩阵
+  iris_fisher$class
+
+# 提取交叉检验的混淆矩阵
+  iris_fisher$classCV
+
+  detach(name = iris_examp)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = iris_examp)
+  
+# 计算 Fisher 线性判别分析：方法 2，以列表形式返回结果
+  library(MASS)
+  iris_fisher <- lda(Species ~., data = iris_examp)
+  iris_fisher
+  
+  # 提取各个类别的观测数量
+  iris_fisher$counts  
+  
+  # 提取总观测数量
+  iris_fisher$N  
+  
+  # 提取类别的名称
+  iris_fisher$lev
+  
+  # 提取各个类别的均值
+  iris_fisher$means  
+  
+  # 提取典型变量的得分系数
+  iris_fisher$scaling  
+  
+# 计算回测值
+  preds <- predict(object = iris_fisher)
+  
+  # 绘制典型变量得分图
+  ggplot(data = as.data.frame(x = preds$x), mapping = aes(x = LD1, y = LD2)) +
+    geom_point(mapping = aes(color = preds$class)) +
+    labs(x = "第一典型变量", y = "第二典型变量", title = "典型变量得分图") 
+  
+# 计算回测值的混淆矩阵
+  DescTools::Conf(x = preds$class, ref = Species)
+  
+# 对投影后的得分绘制分组箱线图
+  ggplot(mapping = aes(x = preds$class, preds$x[, 1])) +
+    geom_boxplot(mapping = aes(fill = preds$class), show.legend = FALSE, 
+                 notch = TRUE, width = 0.2, outlier.color = "red") +
+    labs(x = "Species", y = "第一典型变量", title = "第一典型变量分箱图") +
+    coord_flip()
+  
+  detach(name = iris_examp)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = iris_examp)
+
+# 计算组间方差矩阵、组内方差矩阵、绘制典型变量得分图
+  library(robCompositions)
+  iris_fisher <- daFisher(x = iris_examp[, 1:4], grp = Species, coda = TRUE,
+                          method = "clasical", plotScore = TRUE)
+  names(x = iris_fisher)
+  iris_fisher
+  summary(object = iris_fisher)
+  
+  # 提取组间方差矩阵
+  iris_fisher$B
+  
+  # 提取组内方差矩阵
+  iris_fisher$W
+   
+  # 提取 loadings
+  iris_fisher$loadings
+  
+  # 提取 Fisher 判别函数得分（典型变量得分）
+  fisher_scores <- iris_fisher$fdiscr
+  dim(x = fisher_scores)
+  head(x = fisher_scores, n = 3)
+  
+  # 手动绘制典型变量得分图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(fisher_scores, panel.first = grid(), col = "blue", pch = 20, 
+       xlab = "第一典型变量", ylab = "第二典型变量", main = "典型变量得分图")
+  maptools::pointLabel(x = iris_fisher$fdiscr[, 1], y = iris_fisher$fdiscr[, 2], 
+                       labels = rownames(x = iris_examp), col = "steelblue", 
+                       cex = 0.8, method = "SANN", allowSmallOverlap = TRUE)
+  par(opar)
+  
+  # 提取预测的组别
+  iris_fisher$grppred
+  
+  # 提取实际的组别
+  iris_fisher$grp
+  
+  # 提取混淆矩阵
+  iris_fisher$mc
+  
+  # 提取错误分类率
+  iris_fisher$mcrate
+  
+  # 提取各组别的总体均值
+  iris_fisher$meanov
+  
+  # 提取各组别的比例
+  iris_fisher$pj
+
+  detach(name = iris_examp)
+
+```
+
+# 聚类分析
+
+## 引言
+
+### 聚类分析的概念
+
+* 聚类分析将分类对象分成若干类，相似的对象归为同一类。
+
+* 聚类分析常常用来探索寻找“自然的”分类，并且这样的分类应是对所研究的问题有意义的。
+
+针对分类对象的不同，聚类分析可划分为：
+
+* $Q$ 型聚类：分类对象为观测样例。
+
+* $R$ 型聚类：分类对象为变量。
+
+### 聚类分析的例子
+
+* $Q$ 型聚类  
+
+  - 在商务上，市场分析人员希望将客户基本库中的客户分成不同的客户群，并且用购买模式来刻画不同客户群的特征。
+
+  - 在生物学上，对动植物分类和对基因分类，以获得对种群中固有结构的认识。
+
+  - 在经济学中，根据人均国民收入、人均工农业产值和人均消费水平等多项指标对世界上所有国家的经济发展状况进行分类。
+  
+* $R$ 型聚类： 
+  
+  - 对人体体型指标进行测量，可对所有这些测量的指标进行聚类，一般可分成“纵向”指标（如身高、手臂长、上肢长和下肢长等）和“横向”指标（如体重、颈围、胸围和胸宽等）两类。  
+  
+### 聚类分析和判别分类的区别
+
+* 聚类分析和判别分类是两种不同的分类方法：
+
+  - 在判别分类中，组（或类）的数目是已知的，组是事先已定义好了的，我们将样品分配给其中一个组。
+
+  - 在聚类分析中，无论是类的数目还是类本身在事先都是未知的。
+  
+  - 例如，我们判断某公司的职员来自哪个部门的，这属于判别分类的问题；而我们根据该公司各职员的一些能力和特点进行分类，则属于聚类分析的问题。
+  
+## 距离和相似系数  
+
+### 变量的测量尺度
+
+* 变量的测量尺度：间隔、有序和名义尺度。
+
+* 间隔变量：变量用连续的量来表示。
+
+  - 如长度、重量、速度、温度等。
+
+* 有序变量：变量度量时不用明确的数量表示，而是用等级来表示。
+  
+  - 如某产品分为一等品、二等品、三等品等有次序关系。
+  
+  - 如顾客售后评价从非常满意到非常不满意之间进行选择。
+  
+* 名义变量：变量用一些类表示，这些类之间既无等级关系也无数量关系。
+
+  - 如性别、职业、产品的型号等。
+  
+* 间隔变量也称为定量变量，有序变量和名义变量统称为定性变量或属性变量或分类变量。
+
+## 相似性度量
+
+相似性度量使用距离和相似系数这两类指标。
+
+* 对距离指标来说，距离越小表示相似性越强。
+
+* 对相似系数指标来说，相似系数越大表示相似性越强。
+  
+* 距离指标常用于度量样例之间的相似性，相似系数常用于度量变量之间的相似性。
+
+### 距离的定义
+
+距离：设 $x=(x_1,x_2,\cdots,x_p)^\prime$ 和 $y =(y_1,y_2,\cdots,y_p)^\prime$ 为两个观测样例，则所定义的距离 $d(x,y)$ 一般应满足如下三个条件：
+
+* 非负性：$d(x, y)\geq 0$，$d(x, y)=0$ 当且仅当 $x=y$。
+
+* 对称性：$d(x, y) = d(y, x)$。
+
+* 三角不等式：$d(x, y)\leq d(x,z) + d(z, y)$。
+
+**欧氏（Euclidean）距离**
+  
+$$d(x, y)=\sqrt{(x-y)^\prime(x-y)}$$
+
+* 欧氏距离是聚类分析中最常用的一个距离。
+  
+* 当各变量的单位不同或虽单位相同但各变量的变异性相差较大时，可考虑先对各变量的数据作标准化处理。
+  
+**绝对值距离，也称曼哈顿（Manhattan）距离**
+
+$$d(x,y)=\sum_{i=1}^{p}|x_i-y_i|$$
+  
+* 绝对值距离常被形象地称作“城市街区”距离。
+
+* 当我们对某城市（需考虑彼此之间路程）的位置点进行聚类时，一般使用绝对值距离。
+
+```{r}
+
+# 绝对值距离
+  img <- readPNG(source = "Pictures/绝对值距离.png")
+  grid.raster(image = img, name = "绝对值距离")  
+
+```
+
+**明考夫斯基（Minkowski）距离，也称明氏距离**  
+  
+$$d(x, y)=[\sum_{i=1}^p{\mid{x_i-y_i\mid}}^q] ^{1/q},\quad q\geq 1$$
+  
+* 当 $q=1$ 时，明氏距离就是绝对值距离。
+
+* 当 $q=2$ 时，明氏距离就是欧式距离。
+
+* 当 $q=\infty$ 时，明氏距离称为切比雪夫距离。 
+  
+**兰氏距离，也称堪培拉（Canberra）距离**  
+
+* 当所有的数据皆为正时，可以定义 $x$ 与 $y$ 之间的兰氏距离为：
+
+$$d(x,y)=\sum_{i=1}^{p}\frac{|x_i-y_i|}{x_i+y_i}$$  
+ 
+* 该距离与各变量的单位无关，且适用于高度偏斜或含异常值的数据。
+  
+**最大距离**
+
+$x$ 与 $y$ 的两个分量之间的最长距离。
+
+**马氏距离**
+
+$$d(x, y)=\sqrt{(x-y)^\prime \boldsymbol{S}^{-1}(x-y)},\quad \boldsymbol{S}\;\text{是样本协方差矩阵}$$
+
+* 由于聚类过程中的类一直变化着，样本协方差矩阵 $S$ 一般难以确定，除非有关于不同类的先验知识。因此，在实际聚类分析中，马氏距离一般不是理想的距离。
+  
+**二值（binary）名义变量距离** 
+
+某高校举办一个培训班，从学员的资料中得到这样六个变量：$x_1$ 表示性别（男，女），$x_2$ 表示外语语种（英语，非英语），$x_3$ 表示专业（统计，非统计），$x_4$ 表示职业（教师，非教师），$x_5$ 表示居住处（校内，校外），$x_6$ 表示学位（硕士，学士）。现有两名学员：
+
+$x$ =(男，英语，统计，非教师，校外，学士)′
+
+$y$ =(女，英语，非统计，教师，校外，硕士)′。
+
+我们用 $m_1$ 表示匹配的变量数，$m_2$ 表示不匹配的变量数，则 $x$ 与 $y$ 之间的距离可定义为：
+
+$$d(x,y)=\frac{m_2}{m_1+m_2}$$ 
+
+按上述定义，本例中 $x$ 与 $y$ 之间的距离为 $2/3$。
+
+在 R 中，计算距离使用程序包 stats 中的函数 dist。
+
+```{r}
+
+# 计算距离矩阵
+  x <- matrix(data = rnorm(n = 100, mean = 0, sd = 1), nrow = 5)
+
+  # 欧式距离
+  dist(x = x, method = "euclidean", diag = FALSE, upper = FALSE)
+
+  # 绝对值距离
+  dist(x = x, method = "manhattan", diag = FALSE, upper = FALSE)
+  
+  # 明氏距离
+  dist(x = x, method = "minkowski", diag = FALSE, upper = FALSE, p = 1) # 绝对值距离
+  dist(x = x, method = "minkowski", diag = FALSE, upper = FALSE, p = 2) # 欧氏距离
+  
+  # 兰氏距离
+  dist(x = x, method = "canberra", diag = FALSE, upper = FALSE)
+  
+  # 最大距离
+  dist(x = x, method = "maximum", diag = FALSE, upper = FALSE)
+  
+  # 二值名义距离：编码时，匹配的元素必须编为 1
+  d <- rbind(x = c(1, 1, 1, 0, 1, 0), y = c(0, 1, 0, 1, 1, 1))
+  dist(x = d, method = "binary", diag = TRUE, upper = TRUE)
+
+```
+
+### 相似系数
+
+* 对于间隔变量，变量之间最常用的相似系数是相关系数。
+
+  - 相似系数（或其绝对值）越大，变量之间的相似性程度就越高，反之则相似性程度越低。
+
+  - 变量之间的相似性度量，在一些应用中要看相似系数的大小，而在另一些应用中要看相似系数绝对值的大小。
+
+* 聚类时，将相似程度高的变量归为一类。
+
+* 对于连续型变量，变量之间最常用的相似系数是相关系数。  
+
+```{r}
+
+# 计算相关系数矩阵
+  data("iris", package = "datasets")
+  cor(x = iris[, 1:4], use = "pairwise.complete.obs", method = "pearson")
+  Hmisc::rcorr(x = as.matrix(x = iris[, 1:4]), type = "pearson")
+
+```
+
+## 系统聚类法
+
+### 系统聚类法的概念
+
+* 系统聚类法（也称层次聚类法）是通过一系列相继的合并或相继的分割来进行的，分为聚集系统法与分割系统法两种。
+
+  - 系统聚类法适用于样品数目 $n$ 不是很大的情形。
+  
+* 聚集系统法的基本思想是：开始时将 $n$ 个样品各自作为一类，并规定样品之间的距离和类与类之间的距离，然后将距离最近的两类合并成一个新类，再计算新类与其他类的距离，重复进行两个最近类的合并，每次减少一类，直至所有的样品合并为一个类。
+
+* 分割系统法的聚类步骤与聚集系统法正相反。
+
+* 聚集系统法最为常用，实践中最常使用其中的五种方法，包括：最短距离法、最长距离法、类平均法、重心法、离差平方和法（也称 Ward 方法）。所有这些聚类方法的区别在于类与类之间距离的定义不同。
+
+### 最短距离法
+ 
+定义类与类之间的距离为两类最近样例间的距离，使用最短距离法的递推公式进行计算。
+
+* 最短距离法的聚类结果可使用树形图进行展示。
+
+* 最短距离法有一种挑选长链状聚类的倾向，称为链接倾向，这是最短距离法的一个不足。
+
+* 最短距离法不适合用于对分离得很差的群体进行聚类。
+
+### 最长距离法
+
+类与类之间的距离定义为两类最远样例间的距离。
+
+* 最长距离法与最短距离法的并类步骤完全相同，只是递推公式不同。
+
+* 最长距离法容易被异常值严重地扭曲。   
+
+### 类平均法  
+
+有两种定义
+  
+* 定义 1：两类中各个观测样例距离的平均值。
+  
+* 定义 2：两类中各个观测样例平方距离的平均值。
+
+* 类平均法较好地利用了所有样例之间的信息，在很多情况下它被认为是一种比较好的系统聚类法。
+
+### 重心法
+
+设类 $G_K$ 和 $G_L$ 之间的重心（均值）分别为 $\bar{x_K}$ 和 $\bar{x_L}$，则 $G_K$ 与 $G_L$ 之间的平方距离定义为两类重心之间的距离。
+
+$$D_{K L}^{2}=d_{\bar{x}_{K} \bar{x}_{L}}^{2}=\left(\overline{\boldsymbol{x}}_{K}-\overline{\boldsymbol{x}}_{L}\right)^{\prime}\left(\overline{\boldsymbol{x}}_{K}-\overline{\boldsymbol{x}}_{L}\right)$$
+
+* 与其他系统聚类法相比，重心法在处理异常值方面更稳健，但是在其他的方面一般不如类平均法或离差平方和法的效果好。
+
+### 离差平方和法（Ward 方法）
+
+类内离差平方和：$G_K$ 与 $G_L$ 之间的平方距离定义为
+
+$$\begin{array}{c}
+D_{K L}^{2}=\frac{n_{K} n_{L}}{n_{M}}\left(\overline{\boldsymbol{x}}_{K}-\overline{\boldsymbol{x}}_{L}\right)^{\prime}\left(\overline{\boldsymbol{x}}_{K}-\overline{\boldsymbol{x}}_{L}\right) \\
+\frac{n_{K} n_{L}}{n_{M}}=\frac{n_{K} n_{L}}{n_{K}+n_{L}}=\frac{1}{1 / n_{L}+1 / n_{K}}
+\end{array}$$
+ 
+* 对固定的类内样例数，它们反映了各自类内样例的分散程度。
+
+* 离差平方和法使得两个大的类倾向于有较大的距离，因而不易合并。相反，两个小的类却因倾向于有较小的距离而易于合并。这往往符合我们对聚类的实际要求。
+
+* 离差平方和法在许多场合下被认为是一种比较好的系统聚类法，但该方法对异常值很敏感。
+
+对上述五种方法来说，样本观测数量越小，五种方法的分类结果越近似甚至完全相同。
+
+## 一般的理想聚类结果
+
+单从统计角度来看，理想的聚类结果一般应是：
+
+* 类的个数适当。
+
+* 类之间较为分开而类内相近。
+
+* 未出现不合理的过大的类。
+
+即使满足了上述要求，我们还得看一下所涉及的经济意义。从经济意义角度来看，理想的聚类结果应是：
+
+* 类之间的特征明显不同。
+
+* 类内的特征彼此接近。
+
+### 几点说明
+
+* 如果只使用一个变量进行聚类，一般应采用按大小的排序后再按某种规则或主观确定若干个分界点的方法，不宜采用通常的正规聚类方法。
+  
+* 如果聚类的目标是从全面的角度划分类别，则应使用正规聚类方法，因为正规聚类方法的聚类过程既能够反映出数据中的整体性差异。
+
+* 对聚类的结果必须能够给出合理的现实性解释。
+
+* 对于各种聚类结果进行比较可使用平行图（也称轮廓图）进行直观展示。
+
+## 系统聚类示例
+
+由于聚类分析具有很强的探索性质，因此在进行聚类分析中应该首先基于研究目的和专业领域的知识进行理论上的考虑，然后再尝试多种聚类方法，从中得出最合理的聚类结果。
+
+系统聚类的 R 语言步骤：
+
+* 计算距离阵: dist
+
+* 进行系统聚类: hclust
+
+* 绘制聚类图: plot
+
+* 添加聚类框: rect.hclust
+
+* 确认聚类结果: cutree
+
+系统聚类法使用程序包 stats 中的函数 hclust，其中参数 method 的取值为：
+
+* "single"：最短距离法
+
+* "complete"：最长距离法，默认设置
+
+* "average"：类平均法
+
+* "centroid"：重心法
+
+* "median"：中间距离法
+
+* "ward.D"：离差平方和法
+
+函数 dist 用于计算距离，其中参数 method 的取值为：
+
+* "euclidean"：欧氏距离，默认取值
+
+* "manhattan"：曼哈顿距离，即绝对值距离
+
+* "minkowski"：明氏距离，伴随的参数 $p$ 为明氏距离的幂，$p=2$ 即为欧氏距离
+
+* "canberra"：堪培拉距离，即兰氏距离  
+
+数据：1999 年全国 31 个省、直辖市和自治区的城镇居民家庭平均每人全年消费性支出的八个主要变量数据。
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/examp6.3.3.xlsx")
+  pander::pander(x = mydf[1:3, ])
+
+# 数据的标准化
+  mydf_std <- datawizard::standardize(x = mydf)
+
+# 计算欧式距离矩阵
+  dist_euc <- dist(x = mydf_std[, -1], method = "euclidean")
+
+# 系统聚类：最小距离法，以列表形式返回结果
+  mydf_cluster <- hclust(d = dist_euc, method = "single")
+  names(x = mydf_cluster)
+  
+# 绘制系统聚类图（Cluster Dendrogram）
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mfrow = c(2, 4))
+  
+  for (i in 2:9) {
+    plot(mydf_cluster, labels = mydf$地区, panel.first = grid(), hang = -1,
+       frame.plot = TRUE, xlab = "Euclidean Distance", ylab = "Height", 
+       sub = "", main = paste("Cluster Dendrogram with cluster = ", i, sep = ""))
+    rect.hclust(tree = mydf_cluster, k = i, which = 1:i, border = rainbow(n = i),
+                cluster = cutree(tree = mydf_cluster, k = i, h = i))
+  }
+  
+  par(opar)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(mydf_cluster, labels = mydf$地区, panel.first = grid(), hang = -1,
+       frame.plot = TRUE, xlab = "Euclidean Distance", ylab = "Height",
+       sub = "", main = "Cluster Dendrogram with cluster = 5")
+  rect.hclust(tree = mydf_cluster, k = 5, which = 1:5, border = rainbow(n = 5), 
+              cluster = cutree(tree = mydf_cluster, k = 5, h = 5))
+  par(opar)
+
+# 查看聚类结果
+  table(cutree(tree = mydf_cluster, k = 5))
+
+```
+  
+```{r}
+
+# 读取数据
+  attach(what = mydf_std)
+
+# 系统聚类：重心法，以列表形式返回结果
+  mydf_cluster <- hclust(d = dist(x = mydf_std[, -1]), method = "centroid")
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = mydf_cluster, labels = mydf_std$地区, hang = -1, frame.plot = TRUE, 
+       panel.first = grid(), xlab = "Euclidean Distance", ylab = "Height", 
+       sub = "", main = "Cluster Dendrogram with cluster = 5")
+  rect.hclust(tree = mydf_cluster, k = 5, which = 1:5, border = rainbow(n = 5))
+  par(opar)
+  
+# 查看聚类结果
+  table(cutree(tree = mydf_cluster, k = 5))
+  
+  detach(name = mydf_std)
+
+```
+  
+```{r}
+
+# 读取数据
+  attach(what = mydf_std)
+
+# 系统聚类：首选方法，以列表形式返回结果
+  mydf_cluster <- hclust(d = dist(x = mydf_std[, -1]), method = "ward.D2")
+  
+  clusters <- 7
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = mydf_cluster, labels = mydf_std$地区, hang = -1, frame.plot = TRUE, 
+       panel.first = grid(), xlab = "Euclidean Distance", ylab = "Height", 
+       main = paste("Cluster Dendrogram with cluster = ", clusters, sep = ""))
+  rect.hclust(tree = mydf_cluster, k = clusters, which = 1:clusters,
+              border = rainbow(n = clusters))
+  par(opar)
+  
+# 查看聚类结果
+  table(cutree(tree = mydf_cluster, k = clusters))
+  
+  detach(name = mydf_std)
+
+```
+  
+## 聚类中的若干问题
+
+### 系统聚类法的单调性
+
+令 $D_i$ 是系统聚类法中第 $i$ 次并类时的距离，如果一种系统聚类法能满足 $D_1 \leq D_2 \leq \cdots$，则称该系统聚类方法具有单调性。
+
+* 这种单调性符合系统聚类法的思想，先合并较相似的类，后合并较疏远的类。
+
+* 最短距离法、最长距离法、类平均法、离差平方和法都具有单调性，但重心法不具有单调性。
+
+### 空间的浓缩与扩张
+
+设有两种系统聚类法，它们在第 $i$ 步的距离矩阵分别为 $A_i$ 和 $B_i$，如果 $A_i>B_i$ 则称第一种方法比第二种方法使空间扩张，或第二种方法比第一种方法使空间浓缩。
+
+* 太浓缩的方法不够灵敏，太扩张的方法可能因灵敏度过高而容易失真。
+
+* 类平均法比较适中，它既不太浓缩也不太扩张，因此它在这方面是比较理想的。
+
+* 最短距离法是一种非常浓缩的方法，容易出现链接倾向。
+
+### 使用图形作主观的聚类
+
+* 当 $p=2$ 时，可以直接在散点图上进行主观的聚类，其效果未必逊于、甚至好于正规的聚类方法，特别是在寻找“自然的”类和符合我们实际需要的类方面。
+
+* 当 $p=3$ 时，我们可使用统计软件产生三维旋转图，通过三维旋转从各个角度来观测散点图，作直观的聚类。但由于其视觉效果及易操作性远不如平面散点图，故实践中很少采用，除非样品数很少。
+
+* 当 $p\geq 3$时，我们还可采用主成分分析（这里允许不对主成分给出解释）或因子分析（一般只在对因子的解释感兴趣时使用，实践中很少采用）的技术将维数降至 $2$ 维（偶尔 $3$ 维），然后再生成散点图（或旋转图），从直觉上进行主观的聚类。
+
+### 使用图形对聚类效果的评估
+
+经聚类分析已将类分好之后，常常希望从统计的角度看一下聚类的效果：不同类之间是否分离得较好，同一类内的样品（或变量）是否彼此相似。通常可通过构造图形作直观的观测，所使用的图形有如下两种：
+
+* 将 $p$ 维数据画于平面图上，方法有平行（坐标）图、星形图、切尔诺夫脸谱图、星座图和安德鲁曲线图等，这些图都不太适合样品数很大的场合。
+  
+* 使用 Fisher 判别的降维方法，将 $p$ 维数据降至 $2$ 维或 $3$ 维再构造散点图或三维旋转图。Fisher 降维方法不一定能够保证成功，但如果使用 Fisher 判别的降维方法能够成功，则往往更值得推荐，尤其在样品数很大的场合下。
+ 
+### 对变量的聚类
+
+* 最短距离法、最长距离法和类平均法都属于连接方法，它们既可以用于样品的聚类，也能够用于变量的聚类。
+
+* 不过并非所有的系统聚类方法都适用于对变量的聚类。 
+
+数据：对 305 名女中学生测量八个体型指标，这八个体型指标分别为：
+
+* 身高（$x_1$），手臂长（$x_2$），上肢长（$x_3$），下肢长（$x_4$）、体重（$x_5$）、颈围（$x_6$）、胸围（$x_7$）、胸宽（$x_8$）
+
+* 数据为相关矩阵。
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/examp6.3.7.xlsx")
+
+# 对变量的系统聚类：最小距离法
+  mydf_cluster <- hclust(
+    d = as.dist(m = 1 - mydf[, -1], diag = TRUE, upper = TRUE), 
+    method = "single")
+  
+  clusters <- 2
+  methods <- c("single", "complete", "average", "ward.D")
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mfrow = c(2, 2))
+  
+  for (i in methods) {
+    plot(mydf_cluster, labels = mydf$体型指标, panel.first = grid(),
+         frame.plot = TRUE, sub = "", xlab = "Correlations", ylab = "Height",
+         main = paste("Cluster Dendrogram for Variables Using ", i, sep = ""))
+  rect.hclust(tree = mydf_cluster, k = clusters, which = 1:clusters, 
+              border = c("red", "blue"))
+  }
+  
+  par(opar)
+
+# 查看聚类结果
+  cutree(tree = mydf_cluster, k = clusters)
+
+```
+
+### 类的个数
+
+如果能够分成若干个很分开的类，则类的个数就比较容易确定。反之，如果无论怎样分都很难分成明显分开的若干类，则类个数的确定可能就比较困难了。
+
+确定类个数的常用方法有：
+
+* 给定一个阈值 $T$：通过观测树形图，给出一个你认为合适的阈值 $T$，要求类与类之间的距离要大于 $T$，有些样品可能会因此而归不了类或只能自成一类。这种方法有较强的主观性，这是它的不足之处。
+
+* 观测样品的散点图
+
+  - 如果样品只有两个（或三个）变量，则可通过观测数据的散点图（或旋转图）来主观确定类的个数。
+  
+  - 如果变量个数超过三个，则可对每一可能考虑的聚类结果，将所有样品的前两个（或三个）费希尔判别函数得分制作成散点图（或旋转图），目测类之间是否分离得较好。该图既能帮助我们评估聚类效果的好坏，也能帮助我们判断所定的类数目是否恰当。
+
+* 使用统计量
+
+  - $R^2$ 统计量
+  
+  - 半偏 $R^2$ 统计量
+  
+  - 伪 $R^2$ 统计量
+  
+  - 伪 $R^2$ 统计量
+
+总之，在确定类别的数量时绝不可仅仅依靠统计分析的结果，还必须结合相关领域的专业知识。
+
+## 动态聚类法：$k$ 均值法
+
+动态聚类法也称逐步聚类法，动态聚类法能够处理大样本数据集。
+
+在系统聚类法中，对于那些先前已被“错误”分类的样品不再提供重新分类的机会，而动态聚类法（或称逐步聚类法）却允许样品从一个类移动到另一个类中。
+
+动态聚类法的计算量要比建立在距离矩阵基础上的系统聚类法小得多。因此，使用动态聚类法计算机所能承受的样品数目 $n$ 要远远超过使用系统聚类法所能承受的 $n$。
+
+动态聚类法的基本思想是，选择一批凝聚点或给出一个初始的分类，让样品按某种原则向凝聚点凝聚，对凝聚点进行不断的修改或迭代，直至分类比较合理或迭代稳定为止。类的个数 $k$ 需要事先指定。
+
+* 选择初始凝聚点或给出初始分类的一种简单方法是采用随机抽选或随机分割样品的方法，可以要求凝聚点之间至少应间隔某个距离值。
+
+* 动态聚类法只能用于对样品的聚类，而不能用于对变量的聚类。
+
+动态聚类法有许多种方法，比较流行的动态聚类法是 $k$ 均值法，它是由麦奎因（MacQueen，1967）提出并命名的一种算法。
+
+### $k$ 均值法的基本步骤
+
+* 第一步：选择 $k$ 个样品作为初始凝聚点，或者将所有样品分成 $k$ 个初始类，然后将这 $k$ 个类的重心（均值）作为初始凝聚点。
+
+* 第二步：对所有样品逐个归类，将每个样品归入凝聚点离它最近的那个类（通常采用欧氏距离），该类的凝聚点更新为这一类目前的均值，直至所有样品都归类为止。
+
+* 重复第二步，直至所有的样品都不能再分配为止。
+
+$k$ 均值法的最终聚类结果在一定程度上依赖于初始凝聚点或初始分类的选择。经验表明，聚类过程中的绝大多数重要变化均发生在第一次再分配中。
+
+### $k$ 均值法的几点说明
+
+* 由于 $k$ 均值法对凝聚点的初始选择有一定敏感性，故再试一下其他初始的凝聚点也许是个不错的想法。如果不同初始凝聚点的选择产生明显不同的最终聚类结果，或者迭代的收敛是极缓慢的，那么可能表明没有自然的类可以形成。
+
+* $k$ 均值法有时也可用来改进系统聚类的结果。
+
+  - 例如，先用类平均法聚类，然后将其各类的重心作为 $k$ 均值法的初始凝聚点重新聚类，这可使得系统聚类时错分的样品能有机会获得重新的分类。
+  
+  - $k$ 均值法能否有效地改善系统聚类不能一概而论，还应针对聚类的最终结果进行主观判断。
+  
+在 R 中，$k$ 均值法的计算使用程序包 stats 中的函数 kmeans，其中：
+
+* 参数 center：可接受规定的类别数 $k$，也可接受一个向量作为初始凝聚点。
+
+* 参数 algorithm 可取 "Hartigan-Wong"、"Lloyd"、"Forgy"、"MacQueen"。
+
+### $k$ 均值法的示例
+ 
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/examp6.3.3.xlsx")  
+  mydf_std <- datawizard::standardize(x = mydf)
+  
+# k 均值聚类：以列表的形式返回结果
+# 聚成 5 类，由算法随机选择 5 行作为初始凝聚点
+  mydf.km <- kmeans(x = mydf_std[, -1], centers = 7, algorithm = "MacQueen")
+  names(x = mydf.km)
+  mydf.km
+
+# 对聚类结果进行排序
+  sort(x = mydf.km$cluster, decreasing = FALSE)
+  
+# 绘制 k 均值聚类图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = 1:nrow(x = mydf_std), y = mydf.km$cluster, panel.first = grid(), 
+       type = "p", col = "blue", pch = 20, xlab = "样例编号",ylab = "类别", 
+       main = "k 均值聚类图")
+  maptools::pointLabel(x = 1:nrow(x = mydf_std), y = mydf.km$cluster, 
+                       labels = mydf$地区, cex = 0.8, col = "red", 
+                       method = "SANN", allowSmallOverlap = FALSE)
+  par(opar)
+
+``` 
+
+# 主成分分析
+
+## 主成分分析概述
+
+### 主成分分析的概念
+
+主成分分析（Principal Component Analysis，PCA）由皮尔逊（Pearson，1901）首先引入，霍特林（Hotelling，1933）则进一步发展了主成分分析。
+
+主成分分析是一种通过降维技术把多个变量转化为少数几个主成分（综合变量）的统计分析方法。这些主成分能够反映原始变量的绝大部分信息，主成分通常表示为原始变量的某种线性组合且彼此不相关。
+
+```{r}
+
+# 读取数据
+  crime <- read.table(file = "Data/crime.csv", header = TRUE, sep = ",", 
+                      row.names = "state")
+  head(x = crime, n = 3)  
+
+# 计算相关系数矩阵
+  corr.mat <- cor(x = crime)
+  corr.mat
+
+# 绘制相关系数图
+  library(corrplot)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8)
+  corrplot::corrplot(corr = corr.mat, method = "ellipse", type = "full", 
+                     bg = "tan", col = rainbow(n = 17, alpha = 0.8),
+                     mar = c(1, 2, 4, 1), addCoef.col = "blue", 
+                     addgrid.col = "lightblue", addCoefasPercent = FALSE, 
+                     outline = TRUE, title = " 相关系数图")
+  par(opar)
+  
+```
+
+```{r}
+
+# 读取数据
+  attach(what = crime)
+
+# 绘制相关系数网络图
+  library(qgraph)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  qgraph(input = cor(crime), cut = 0.3, details = TRUE, posCol = "orange")
+  par(opar)
+
+  detach(name = crime)
+
+```
+
+* 该相关矩阵表明，变量之间存在一定的相关性，即彼此之间信息有不少是重复的，从而有一定的降维空间。
+
+* 该案例可用主成分分析进行降维，降维之后再进行比较分析。
+
+### 主成分分析的应用  
+
+* 在一些应用中，用少数的前几个主成分替代众原始变量，此时找到这些主成分就成了分析的目标。
+
+  - 这种应用需要对这些前几个主成分给出一个符合实际背景和意义的解释。
+  
+* 在更多的另一些应用中，主成分只是要达到目的的一个中间结果（或步骤），而非目的本身。
+
+  - 例如，主成分聚类、主成分回归、评估正态性、寻找异常值，以及寻找原始变量间的多重共线性关系等。
+  
+  - 此时的主成分可不必给出解释。
+
+## 总体的主成分
+
+### 主成分的定义及解
+
+设 $x=(x_1,x_2,\cdots,x_p)^\prime$ 是一个 $p$ 维向量，$E(x)=\mu$ 且 $V(x)=\Sigma$，则原始向量 $x$ 的第 $i$ 个主成分 $y_i=a_i^\prime{x}$ 是指在满足 $\lVert{a_i}\rVert=1$ 和 $Cov(y_k,y_i)=0$ 的条件下寻找 $a_i$，使得 $V(y_i)={a_i^\prime}{\Sigma}a_i$ 达到最大。可求得：
+
+$$y_i=t_{1i}x_1+t_{2i}x_2+\cdots+t_{pi}x_p$$
+
+$y_i$ 称为主成分得分，其方差为 $\lambda_i$，$\lambda_i$ 是原始 $p$ 维向量 $x$ 协方差矩阵的第 $i$ 个特征值，$t_i=(t_{1i},t_{2i},\cdots,t_{pi})^\prime$ 是原始向量 $p$ 维向量 $x$ 协方差矩阵的第 $i$ 个特征向量。
+
+### 主成分的几何意义
+  
+在几何上，$t_i$ 表明了第 $i$ 个主成分 $y_i$ 的方向，$y_i$ 是 $x$ 在 $t_i$ 上的投影值（其绝对值即为投影长度），$\lambda_i$ 是这些值的方差，它反映了 $t_i$ 上投影点的变异程度。
+
+```{r}
+
+# 主成分的几何意义
+  img <- readPNG(source = "Pictures/主成分的几何意义.png")
+  grid.raster(image = img, name = "主成分的几何意义")
+  
+```
+
+该变换的几何意义是对原始的 $p$ 维向量做正交旋转，使得变换后得到的 $p$ 个主成分彼此无关。
+
+### 主成分的性质
+  
+* 由于第 $i$ 个主成分 $y_i$ 的方差满足 $V(y_i)=\lambda_i$ 并且各个主成分之间彼此互不相关，因此主成分向量的方差满足 $V(y)=\Lambda$，$\Lambda$ 是一个由原始向量 $x$ 的协方差矩阵的特征值构成的对角矩阵。
+
+* 各个主成分的方差之和等于原始 $p$ 维向量 $x$ 的协方差矩阵的方差，即
+
+$$\sum_{i=1}^p{\lambda_i}=\sum_{i=1}^p{\sigma_{ii}}$$
+
+或
+
+$$\sum_{i=1}^{p} V\left(y_{i}\right)=\sum_{i=1}^{p} V\left(x_{i}\right)$$
+  
+  - 上式表明，经过变换后的各个主成分能够从整体上保留原始向量 $x$ 的全部信息。
+
+* 总方差中属于第 $i$ 个主成分 $y_i$（或被 $y_i$ 所解释）的比例为：
+
+$$\lambda_i\large{/}{\sum_{j=1}^p{\lambda_j}}$$
+
+  - 这一比例称为主成分 $y_i$ 的贡献率。
+
+  - 第一主成分 $y_1$ 的贡献率最大，表明它对原始 $p$ 维向量 $x$ 的解释能力最强，其后的主成分 $y_2,y_3,\cdots,y_p$ 的解释能力依次递减。
+
+  - 主成分分析的目的就是为了减少变量的个数，因此一般是不会使用所有 $p$ 个主成分的，但是忽略一些具有较小方差的主成分不会给总方差带来大的影响。
+
+* 前 $m$ 个主成分的贡献率之和：
+
+$${\sum_{i=1}^m{\lambda_i}}\large{/}{\sum_{j=1}^p{\lambda_j}}$$
+
+称为主成分 $y_1,y_2,\cdots,y_m$ 的累计贡献率，它表示主成分 $y_1,y_2,\cdots,y_m$ 对原始 $p$ 维向量 $x$ 的总解释能力。
+
+  - 通常取相对于 $p$ 较小的 $m$ ，使得累计贡献达到一个较高的百分比，如 $80\%\sim 90\%$。此时，就可使用 $(y_1,y_2,\cdots,y_m)$ 来代替 $(x_1,x_2,\cdots,x_p)$，从而达到降维的目的，而信息的损失却不多。
+
+* 原始变量 $x_i$ 与主成分 $y_k$ 之间的相关系数
+
+$$\rho(x_i, y_k)=\frac{\sqrt{\lambda_k}}{\sigma_{ii}}t_{ik}$$
+
+  - 在实际应用中，通常我们只对 $x_i,\; i=1,2,\cdots,p$ 与 $y_k,\; k=1,2,\cdots,m$ 之间的相关系数感兴趣。
+
+* 原始变量对主成分的影响
+
+$$y_k=t_{1k}x_1+t_{2k}x_2+\cdots+t_{pk}x_p$$
+
+  - 称 $t_{ik}$ 为 $y_k$ 在 $x_i$ 上的载荷，它反映了 $x_i$ 对 $y_k$ 的重要程度。$t_{ik}$ 的绝对值越大，$x_i$ 对 $y_k$ 的重要程度越高。
+
+  - $\rho(x_i, y_k)=\frac{\sqrt{\lambda_k}}{\sigma_{ii}}t_{ik}$ 与 $t_{ik}$ 具有相同的符号，且成正比。
+
+  - 在解释主成分时，我们需要考察相关系数 $\rho(x_i, y_k)$，更为重要的是考察载荷 $t_{ik}$。
+
+### 对原始变量线性组合含义的解释
+
+* 从系数角度来说，取决于变量系数的符号和相对大小。
+
+* 从相关系数角度来说，取决于线性组合与各变量相关系数的符号和相对大小。
+
+```{r}
+
+# 创建协方差矩阵
+  mat <- matrix(data = c(16, 2, 30, 2, 1, 4, 30, 4, 100), nrow = 3, 
+                byrow = TRUE)
+  
+# 计算协方差矩阵的特征值与特征向量
+  eigen_vec <- eigen(x = mat, symmetric = TRUE)
+  
+  # 特征值
+  eigens <- eigen_vec$values
+  eigens
+
+  # 特征向量
+  eigenvectors <- eigen_vec$vectors
+  eigenvectors
+
+```
+  
+相应的主成分分别为：
+
+$$y_1=0.305x_1+0.041x_2+0.951x_3$$
+
+$$y_2=0.943x_1+0.120x_2-0.308x_3$$
+
+$$y_3=-0.127x_1-0.992x_2+0.002x_3$$
+
+* 方差大的主成分与方差大的原始变量有较密切的联系，而方差小的主成分与方差小的原始变量有较强的联系。
+
+* 通常我们取前几个主成分，因此所取主成分会过于照顾方差大的原始变量，而对方差小的原始变量却照顾得不够。
+
+* 原始变量的方差大小差异大时第一主成分的贡献率或前几个主成分的累计贡献率往往显得很大。
+  
+```{r}
+
+# 计算主成分的累计贡献率
+  cumsum(x = eigens)/sum(eigens, na.rm = TRUE)
+
+```
+
+### 从相关阵出发求主成分
+
+通常有两种情形不适合直接从协方差矩阵 $\Sigma$ 出发进行主成分分析。
+
+* 一种是各变量的单位不全相同的情形。
+
+* 另一种是各变量的单位虽相同，但其变量方差的差异较大。
+
+  - 在实际应用中，常表现为各变量数据间的数值大小相差较大。
+
+为解决上述问题，需要对原始的 $p$ 维向量 $x$ 进行标准化变换。 
+
+* 标准化后的 $p$ 维向量 $x^{*}$ 的协方差矩阵 $\Sigma$ 正是原始 $p$ 维向量 $x$ 的相关系数矩阵 $\boldsymbol {R}$。
+
+  - 从相关阵 $\boldsymbol {R}$ 出发求主成分，主成分分析将均等地对待每一个原始变量。
+
+从相关阵 $\boldsymbol {R}$ 出发的主成分有一个很好的性质，即相关阵特征值之和等于原始向量的个数 $p$。
+
+$$\sum_{i=1}^p{\lambda_i^{*}}=p$$
+
+```{r}
+
+# 对原始数据进行标准化
+  A <- rbind(c(1, 2, 3, 4, 5), 
+             c(2, 4, 7, 8, 9), 
+             c(3, 7, 10, 15, 20), 
+             c(4, 8, 15, 30, 20), 
+             c(5, 9, 20, 20, 40))
+  A_std <- datawizard::standardize(x = A)
+
+# 验证：标准化后数据的协方差矩阵等价于原始数据的相关系数矩阵
+  all.equal(target = cor(x = A), current = cov(x = A_std))
+
+```
+
+```{r}
+
+# 创建协方差矩阵
+  mat <- matrix(data = c(16, 2, 30, 2, 1, 4, 30, 4, 100), nrow = 3, 
+                byrow = TRUE)
+
+# 从协方差矩阵计算相关系数矩阵
+  cor_mat <- cov2cor(V = mat)
+  
+# 计算相关系数矩阵的特征值与特征向量
+  eigens <- eigen(x = cor_mat) 
+  eigenvalues <- eigens$values
+  eigenvectors <- eigens$vectors  
+
+# 计算相关系数矩阵的特征值之和：用于验证特征值之和对于原始向量的维度 p
+  sum(eigenvalues, na.rm = TRUE)
+  
+# 计算各个主成分的累计贡献率
+  cumsum(x = eigenvalues)/sum(eigenvalues, na.rm = TRUE)
+
+```
+
+相应的主成分分别为：
+
+$$y_1=-0.627x_1-0.497x_2-0.6x_3$$
+
+$$y_2=0.241x_1-0.856x_2+0.457x_3$$
+
+$$y_3=0.741x_1-0.142x_2-0.656x_3$$
+  
+一般来说，各原始变量方差之间的差异越大，从相关阵 $\boldsymbol {R}$ 出发与从协差阵 $\Sigma$ 出发得到的主成分结果就越不相同。标准化后的结论完全可能会发生很大的变化，因此标准化是非常重要的。
+
+## 样本的主成分
+
+* 用样本协差阵和样本相关阵代替总体协差阵和总体相关阵。
+
+  - 所有观测值的平均主成分得分为零。
+
+## 主成分应用中需注意的问题
+
+* 在本身作为目标的主成分分析中，我们首先应保证所提取的前几个主成分的累计贡献率达到一个较高的水平，其次对这些被提取的主成分必须都能够给出符合实际背景且有实际意义的解释。
+
+* 主成分的解释其含义一般多少带有点模糊性，不像原始变量的含义那么清楚确切，这是变量降维过程中必须付出的代价。因此，提取的主成分个数 $m$ 通常应明显小于原始变量个数 $p$（除非 $p$ 本身就很小），否则维数降低的“利”可能抵不过主成分含义不如原始变量清楚的“弊”。
+
+* 如果原始变量之间具有较高的相关性，则前面少数几个主成分的累计贡献率通常就能达到一个较高水平。也就是说，此时的累计贡献率通常较易得到满足。
+
+* 主成分分析的困难之处主要在于要能够给出主成分的较好解释，所提取的主成分中如果有一个主成分解释不了，本身作为目的的整个主成分分析也就失败了。
+
+总之，主成分要应用得成功，一是靠原始变量的合理选取，二是靠“运气”。
+
+### 主成分的保留个数
+
+应保留多少个主成分要视具体情况，很难一概而论，最终一般还得依赖于主观判断。
+
+* 单从保留信息量的角度出发，通常有以下几种选择主成分个数的方法：
+
+  - 保留的前几个主成分能使累计贡献率达到一个较高的比例（如 $80\%$），具体比例值需主观判断确定，这是最为推荐的方法。
+
+  - 当从 $S$ 或 $\Sigma$ 出发求主成分时，有一个经验规则就是只保留特征值大于其平均值 $\sum_{i=1}^p/p$ 或 $1$ 的主成分。这是一个粗略的经验规则，只宜作为选择主成分个数的初步参考。
+
+  - 另外一种能够帮助我们确定主成分个数的视觉工具，就是使用陡坡图。
+
+  - 最后，根据对主成分所对应的特征值进行显著性检验，该方法在实践中较少采用。
+
+* 如果我们需要对主成分进行解释，则选用多少个主成分就还需考虑所选主成分是否都能作出成功的解释，有时可能会为此牺牲累计贡献率。
+
+* 如果不需要对主成分作出解释（此时的主成分得分通常只是作为进入下一阶段分析的输入数据，即主成分仅是整个分析过程的中间结果），则主成分个数的选择一般更倾向于保持一个足够高的累计贡献率，除非需要画散点图。
+
+* 取多少个主成分有时也要视作图或排序的需要而定。
+
+  - 当取三个和四个主成分都可行时，选取三个主成分有一大好处，就是可以利用三维旋转图对所有样品的三个主成分得分进行直观的比较分析。
+  
+  - 当取两个和三个主成分都可行时，选取两个主成分的主要好处是，平面散点图可以比三维旋转图观测得更为清楚和方便，且可打印输出。
+  
+  - 当取一个和两个主成分都可行时，取一个的优点是可以对各样品进行排序（这种排序必须是有实际意义的），取两个的优点是可以画散点图及保留更多的信息。
+  
+  - 如果我们对样品的排序不感兴趣，则一般应考虑取两个主成分，哪怕第二主成分的贡献率明显偏低些，因为取一个主成分不利于作图。此外，通过对前两个或三个主成分的作图，还有助于从直觉上发现异常值、评估正态性以及进行其他的探索性分析等。
+
+### 关于样本容量 $n$ 的大小
+
+* 不同于判别分析，在主成分的计算过程中不涉及 $S$ 或 $R$ 的逆，故理论上允许 $n\leq p$。
+
+* 一般（特别是在主成分本身作为目标的分析中）较理想的是能满足 $n$ 很大（如 $n\geq 50$）且 $n$ 至少是 $p$ 的 $5$ 倍，这样通常可使 $S$ 或 $R$ 的值比较稳定，分析结果一般也就不会随样本容量的变化而发生较大的改变，从而使结论更加可信。
+
+### 关于异常值的影响
+
+* 有时少数几个异常值就可对 $S$ 或 $R$ 的值产生较大甚至是非常大的影响。
+
+* 遇到这种异常值通常可有两种处理方法：
+  
+  - 一种是从数据中找出异常值并直接剔除。
+  
+  - 另一种是采用 $\Sigma$ 或 $R$ 的稳健估计，而不是简单计算 $S$ 或 $R$，从而得到一个受异常值影响程度相对较小的估计。
+ 
+### 关于时间序列数据
+
+在绝大多数情况下下，时间序列数据 $x_1,x_2,\cdots,x_n$ 是彼此相关的，从而不再是一个简单随机样本。此时，由 $x_1,x_2,\cdots,x_n$ 计算得到的 $S$ 将不再是对 $\Sigma$ 的无偏估计，尤其是当 $x_1,x_2,\cdots,x_n$ 彼此间高度相关时更是如此。因此，直接从 $S$ 或 $R$ 出发进行的主成分分析是没有意义的。
+  
+* 处理方法是将原始数据变换为无相关的数据，如将股票的各个星期中的收盘价转换为周回报率，即
+
+$$\text{本周回报率}=\frac{\text{本周五收盘价}-\text{上周五收盘价}}{\text{上周五收盘价}}$$
+
+### 主成分用于聚类分析
+
+* 主成分用于聚类的优势就在于能够从直观的散点图上进行（或许更有效、合理的）分类。
+
+  - 其优势不在于用来计算样品间的距离。
+
+  - 使用前几个主成分计算样品之间的距离一般不如使用所有的主成分计算距离精确。
+  
+  - 而使用所有的主成分计算距离相当于直接使用所有的原始变量来计算。
+
+* 用于聚类的主成分在绝大多数场合下纯粹只是一个中间结果，此时一般无需对主成分进行解释。
+
+* 如果希望用图形的方法来评估最终的聚类结果，则使用费希尔判别函数比使用主成分更为合适。
+
+  - 费希尔判别得分散点图：能最大限度地显现出类之间的差异。
+
+  - 主成分得分散点图：最大限度显现的却是样品之间的差异。  
+
+* 从经验来看，在大多数的实际数据中，由主成分得分构成的散点图还是能够基本反映聚类效果的，只是相比费希尔判别的得分散点图一般要逊色一些。
+
+  - 需注意，利用降维后的图形进行聚类不适合使用费希尔判别得分图。 
+ 
+### 关于不同时期的主成分分析
+
+* 一般来说，对于相同的原始变量，某个时期的主成分分析能成功未必意味着其他时期的主成分分析也能成功。
+
+* 不同时期同样成功的主成分分析其主成分解释可能相同，也可能有差异。即使给出相同的解释，其主成分的具体内涵一般也不会完全相同，故不同时期的主成分之间一般是不可比较的。  
+  
+### 关于定性数据
+
+* 不能名义变量数据进行主成分分析，因为差值没有意义。
+
+* 如果是有序变量数据，一般可将其转化为间隔变量数据，然后再进行主成分分析。例如：
+
+  - 假设变量由低到高的等级依次是 $A,B,C,D,E$，如认为相邻等级的差异基本相同，则可转化为 $1,2,3,4,5$ 或 $5,4,3,2,1$。
+  
+* 上述转化方法一般也可用于其他专门用于间隔变量的统计方法，转化效果取决于我们对各相邻等级之间相对差异的认识程度。
+ 
+### 对主成分综合得分方法的质疑
+
+在多元数据分析中，国内流行一种通过建立主成分的综合评价函数（以贡献率为权数对前几个主成分加权求和）来对所有样品进行综合排名的方法。
+
+* 该方法是对主成分的错误理解而产生的一种完全错误的方法，貌似合理实则毫无合理性可言，不应使用。
+
+## 主成分分析的示例
+
+在 R 中，对原始数据进行主成分分析，使用程序包 stats 中的函数 princomp，其中：  
+
+* 参数 cor 表示是否从相关矩阵出发，默认设置为 cor = FALSE，即从协方差矩阵出发。
+
+* 参数 scores 表示是否计算主成分得分，默认设置为  scores = TRUE。
+
+### 示例：针对样本相关矩阵
+
+示例 1：在制定服装标准的过程中，对 $128$ 名成年男子的身材进行了测量，每人测得的指标中含有以下六项：
+
+* $x_1$：身高		
+		     
+* $x_2$：坐高		
+
+* $x_3$：胸围		
+
+* $x_4$：手臂长
+  
+* $x_5$：肋围
+
+* $x_6$：腰围
+ 
+```{r}
+
+# 读取数据
+  Rmat <- rio::import(file = "Data/examp7.3.1.csv")
+  rownames(x = Rmat) <- Rmat$V1
+  Rmat <- Rmat[, -1]
+
+# 根据相关矩阵计算特征值与特征向量
+  eigens <- eigen(x = Rmat, symmetric = TRUE)
+  eigenvalues <- eigens$values
+  eigenvectors <- eigens$vectors
+
+# 计算贡献率
+  contributions_ind <- eigenvalues/sum(eigenvalues, na.rm = TRUE)
+  contributions_ind
+
+# 计算累积贡献率
+  contributions_cum <- cumsum(x = contributions_ind)
+  contributions_cum
+
+# 绘制陡坡图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(contributions_cum, type = "o", col = "blue", pch = 20, 
+       panel.first = grid(), xlab = "主成分序号", ylab = "累积贡献率",
+       main = "主成分累积贡献率的陡坡图")
+  par(opar)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(eigenvalues, panel.first = grid(), type = "o", pch = 20, col = "blue", 
+       xlab = "主成分序号", ylab = "特征值", main = "主成分特征值的陡坡图")
+  par(opar)
+
+```
+
+**注**：由于本例中没有提供原始数据，因此无法计算主成分得分。
+
+```{r}
+
+# 使用模拟正态数据绘制主成分散点图
+  y1 <- rnorm(n = 128, mean = 0, sd = eigenvalues[1])
+  y2 <- rnorm(n = 128, mean = 0, sd = eigenvalues[2])
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = y1, y = y2, panel.first = grid(), type = "p", pch = 20, col = "blue",
+       xlim = c(-10, 10), ylim = c(-4, 4), 
+       xlab = "第一主成分", ylab = "第二主成分", main = "主成分散点图")
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+
+```  
+
+示例 2：八项男子径赛运动记录
+
+* $x_1$：100米（秒）		 
+ 
+* $x_2$：200米（秒）		 
+   
+* $x_3$：400米（秒）  
+
+* $x_4$：800米（秒）		 
+
+* $x_5$：1500米（分）
+
+* $x_6$：5000米（分）
+
+* $x_7$：10000米（分）
+
+* $x_8$：马拉松（分）
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/exec6.6.xlsx")
+  rownames(x = mydf) <- mydf$nation
+  mydf <- mydf[, -1]
+  
+# 计算相关系数矩阵
+  Rmat <- cor(x = mydf, use = "pairwise.complete.obs", method = "pearson")
+  Rmat
+
+# 主成分分析：以列表形式返回结果
+  mydf.pc <- princomp(x = mydf, cor = TRUE, scores = TRUE, fix_sign = TRUE)
+  names(x = mydf.pc)
+  summary(object = mydf.pc)
+  
+# 提取载荷因子：即特征向量
+  mydf.pc$loadings
+  
+# 提取主成分得分
+  scores.pc <- mydf.pc$scores  
+  pander::pander(x = head(x = scores.pc, n = 3))
+  
+# 绘制第一、二主成分得分的散点图：自动添加标签
+  pc1_2 <- scores.pc[, 1:2]
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(pc1_2, panel.first = grid(), type = "p", pch = 20, col = "blue",
+       xlim = c(-10, 12), ylim = c(-5, 5), 
+       xlab = "第一主成分", ylab = "第二主成分", main = "主成分散点图")
+  maptools::pointLabel(x = pc1_2[, 1], y = pc1_2[, 2], 
+                       labels = rownames(x = mydf), cex = 0.8, 
+                       col = "steelblue", method = "SANN")
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+# 绘制陡坡图（也称碎石图）：纵轴就是特征值或方差
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  screeplot(mydf.pc, panel.first = grid(), type = "lines", pch = 20, col = "blue", 
+            main = "主成分特征值的陡坡图")
+  box()
+  par(opar)
+
+```
+
+示例 3：美国 50 个州每十万人中七种犯罪的比率数据。
+
+* $x_1$：杀人罪
+ 
+* $x_2$：强奸罪
+   
+* $x_3$：抢劫罪
+
+* $x_4$：伤害罪
+
+* $x_5$：夜盗罪
+
+* $x_6$：盗窃罪
+
+* $x_7$：汽车犯罪  
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/exec7.6.csv")
+  rownames(x = mydf) <- mydf$state
+  mydf <- mydf[, -1]
+  
+# 计算相关系数矩阵
+  Rmat <- cor(x = mydf, use = "pairwise.complete.obs", method = "pearson")
+  Rmat
+
+# 主成分分析：以列表形式返回结果
+  mydf.pc <- princomp(x = mydf, cor = TRUE, scores = TRUE, fix_sign = TRUE)
+  names(x = mydf.pc)
+  summary(object = mydf.pc)
+  
+# 提取载荷因子：即特征向量
+  mydf.pc$loadings
+  
+# 提取主成分得分
+  scores.pc <- mydf.pc$scores  
+  pander::pander(x = head(x = scores.pc, n = 3))
+  
+# 绘制第一、二主成分得分的散点图：自动添加标签
+  pc1_2 <- scores.pc[, 1:2]
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(pc1_2, panel.first = grid(), type = "p", pch = 20, col = "blue",
+       xlim = c(-6, 6), ylim = c(-3, 3), 
+       xlab = "第一主成分", ylab = "第二主成分", main = "主成分散点图")
+  maptools::pointLabel(x = pc1_2[, 1], y = pc1_2[, 2], 
+                       labels = rownames(x = mydf), cex = 0.8, 
+                       col = "steelblue", method = "SANN")
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+# 绘制陡坡图（也称碎石图）：纵轴就是特征值或方差
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  screeplot(mydf.pc, panel.first = grid(), type = "lines", pch = 20, col = "blue", 
+            main = "主成分特征值的陡坡图")
+  box()
+  par(opar)
+
+```
+
+示例 4：中国 31 个省市自治区消费数据。
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/examp7.3.3.xlsx")
+  rownames(x = mydf) <- mydf$region
+  mydf <- mydf[, -c(1, 2)]
+  
+# 计算相关系数矩阵
+  Rmat <- cor(x = mydf, use = "pairwise.complete.obs", method = "pearson")
+  Rmat
+
+# 主成分分析：以列表形式返回结果
+  mydf.pc <- princomp(x = mydf, cor = TRUE, scores = TRUE, fix_sign = TRUE)
+  names(x = mydf.pc)
+  summary(object = mydf.pc)
+  
+# 提取载荷因子：即特征向量
+  mydf.pc$loadings
+  
+# 提取主成分得分
+  scores.pc <- mydf.pc$scores  
+  pander::pander(x = head(x = scores.pc, n = 3))
+  
+# 绘制第一、二主成分得分的散点图：自动添加标签
+  pc1_2 <- scores.pc[, 1:2]
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(pc1_2, panel.first = grid(), type = "p", pch = 20, col = "blue",
+       xlim = c(-6, 6), ylim = c(-3, 3), 
+       xlab = "第一主成分", ylab = "第二主成分", main = "主成分散点图")
+  maptools::pointLabel(x = pc1_2[, 1], y = pc1_2[, 2], 
+                       labels = rownames(x = mydf), cex = 0.8, 
+                       col = "steelblue", method = "SANN")
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+# 绘制陡坡图（也称碎石图）：纵轴就是特征值或方差
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  screeplot(mydf.pc, panel.first = grid(), type = "lines", pch = 20, col = "blue", 
+            main = "主成分特征值的陡坡图")
+  box()
+  par(opar)
+
+```
+
+# 因子分析
+
+## 因子分析概述
+
+以找到主成分为目标的主成分分析的成功需满足如下两点：
+
+* 前（少数）几个主成分具有较高的累计贡献率，这通常较易得到满足。
+
+* 对主成分给出符合实际背景和意义的解释，这往往正是主成分分析的困难之处。
+
+### 因子分析的概念
+
+因子分析的目标和用途与主成分分析类似，它也是一种降维方法。因子分析可视为是对主成分分析的拓展，但是因子分析往往比主成分更容易得到解释。
+
+因子分析起源于 20 世纪初，K.皮尔逊（Pearson）和 C.斯皮尔曼（Spearman）等学者为定义和测定智力所作的努力，主要是由对心理测量学有兴趣的科学家们培育和发展了因子分析。
+
+### 因子分析与主成分分析的区别
+
+因子分析与主成分分析的主要区别：
+
+* 主成分分析涉及的只是一般的变量变换（正交旋转），它不能作为一个模型来描述，本质上主成分分析几乎不需要任何假定；而因子分析需要构造一个因子模型，并伴有几个关键性的假定。
+
+* 在主成分分析中，主成分是原始变量的线性组合；而在因子分析中，原始变量是因子的线性组合，但因子却一般不能表示为原始变量的线性组合。
+
+主成分分析: $x_{1}, x_{2}, \cdots, x_{p} \rightarrow y_{1}, y_{2}, \cdots, y_{m}$
+
+$$\begin{array}{c}
+y_{1}=t_{11} x_{1}+t_{21} x_{2}+\cdots+t_{p 1} x_{p}=\boldsymbol{t}_{1}^{\prime} \boldsymbol{x} \\
+y_{2}=t_{12} x_{1}+t_{22} x_{2}+\cdots+t_{p 2} x_{p}=\boldsymbol{t}_{2}^{\prime} \boldsymbol{x} \\
+\vdots \\
+y_{m}=t_{1 m} x_{1}+t_{2 m} x_{2}+\cdots+t_{p m} x_{p}=\boldsymbol{t}_{m}^{\prime} \boldsymbol{x}
+\end{array}$$
+  
+因子分析: $x_{1}, x_{2}, \cdots, x_{p} \rightarrow f_{1}, f_{2}, \cdots, f_{m}$   
+  
+$$\left\{\begin{array}{c}
+x_{1}=\mu_{1}+a_{11} f_{1}+a_{12} f_{2}+\cdots+a_{1 m} f_{m}+\varepsilon_{1} \\
+x_{2}=\mu_{2}+a_{21} f_{1}+a_{22} f_{2}+\cdots+a_{2 m} f_{m}+\varepsilon_{2} \\
+\vdots \\
+x_{p}=\mu_{p}+a_{p 1} f_{1}+a_{p 2} f_{2}+\cdots+a_{p m} f_{m}+\varepsilon_{p}
+\end{array}\right.$$
+ 
+* 在主成分分析中，强调的是用少数几个主成分解释总方差；而在因子分析中，强调的是用少数几个因子去描述协方差或相关系数。
+
+* 主成分分析的解是唯一的（除非含有相同的特征值或特征向量为相反符号）；而因子的解可以有很多，表现得较为灵活（主要体现在因子旋转上），这种灵活性使得变量在降维之后更易得到解释，这是因子分析比需要对主成分作出解释的主成分分析有更广泛应用的一个重要原因。
+
+* 主成分不会因其所提取的主成分的个数的改变而变化，但因子往往会随模型中因子个数的不同而变化。
+
+### 因子分析的例子
+
+林登（Linden）根据他收集的来自 $139$ 名运动员的比赛数据，对二战后奥林匹克十项全能比赛的得分作了因子分析研究。经标准化后所作的因子分析表明，十项得分基本上可归结于运动员的爆发性臂力强度、短跑速度、爆发性腿部强度和跑的耐力这四个方面，每一方面都称为一个因子。
+
+十项得分与这四个因子之间的关系可以描述为如下的因子模型：
+
+$$x_i = \mu_i + a_{i1}f_1+a_{i2}f_2+a_{i3}f_3+a_{i4}f_4+\epsilon_i,\quad i=1, 2, \cdots,10$$
+  
+其中：
+
+* $f_1,f_2,f_3,f_4$ 表示四个因子，称为公共因子（简称因子）
+
+* 系数 $a_{ij}$ 称为原始变量 $x_i$ 在公共因子 $f_j$ 上的载荷，$f_j$ 反映了该因子对原始变量 $x_i$ 的重要性。
+
+* $\mu_i$ 是变量 $x_i$ 的均值
+
+* $\epsilon_i$ 是 $x_i$ 不能被四个公共因子解释的部分，可视为误差，称为特殊因子。
+
+## 正交因子模型 
+ 
+### 数学模型
+
+设有 $p$ 维可观测的随机向量 $x=(x_1,x_2,\cdots, x_p)^\prime$，其均值向量为 $\mu=(\mu_1,\mu_2,\cdots, \mu_p)^\prime$，协差阵为 $\Sigma=(\sigma{_ij})$。因子分析的一般模型为：
+
+$$\left\{\begin{array}{c}
+x_{1}=\mu_{1}+a_{11} f_{1}+a_{12} f_{2}+\cdots+a_{1 m} f_{m}+\varepsilon_{1} \\
+x_{2}=\mu_{2}+a_{21} f_{1}+a_{22} f_{2}+\cdots+a_{2 m} f_{m}+\varepsilon_{2} \\
+\vdots \\
+x_{p}=\mu_{p}+a_{p 1} f_{1}+a_{p 2} f_{2}+\cdots+a_{p m} f_{m}+\varepsilon_{p}
+\end{array}\right.$$    
+  
+其中，$f_1,f_2,\cdots,f_m$ 为公共因子，$\epsilon_1,\epsilon_2,\cdots,\epsilon_m$ 为特殊因子，它们都是不可观测的随机变量，也称隐变量。
+  
+* 由于公共因子出现在每一个原始变量的表达式中，可理解为原始变量共同具有的公共因素。
+
+因子分析的一般模型可用矩阵表示为：
+  
+$$\boldsymbol{x}=\boldsymbol{\mu}+\boldsymbol{Af}+\boldsymbol{\epsilon}$$
+
+上式中 $\boldsymbol{f}=\left(f_{1}, f_{2}, \cdots, f_{m}\right)^{\prime}$ 称为公共因子向量，$\varepsilon=\left(\varepsilon_{1}, \varepsilon_{2}, \cdots, \varepsilon_{p}\right)^{\prime}$  为特殊因子向量，$\boldsymbol{A}=\left(a_{i j}\right): p \times m$ 称为因子载荷矩阵。 
+
+通常假定：
+ 
+$$\left\{\begin{array}{l}
+E(\boldsymbol{f})=\mathbf{0} \\
+E(\boldsymbol{\varepsilon})=\mathbf{0} \\
+V(\boldsymbol{f})=\boldsymbol{I} \\
+V(\varepsilon)=\boldsymbol{D}=\operatorname{diag}\left(\sigma_{1}^{2}, \sigma_{2}^{2},\cdots, \sigma_{p}^{2}\right) \\
+\operatorname{Cov}(\boldsymbol{f}, \boldsymbol{\varepsilon})=E\left(\boldsymbol{f} \varepsilon^{\prime}\right)=\mathbf{0}
+\end{array}\right.$$ 
+
+其中：$V(\boldsymbol{f})=\boldsymbol{I}$ 表示公共因子之间是正交的，也即公共因子之间是彼此无关的。
+
+该假定和上述关系式构成了正交因子模型。由上述假定可以看出，公共因子彼此不相关且具有单位方差，特殊因子也彼此不相关且和公共因子也不相关。 
+
+### 正交因子模型的性质
+
+**$x$ 的协差阵 $\Sigma$ 的分解**
+
+$p$ 维向量 $x$ 的协差阵 $\boldsymbol\Sigma$ 可分解为：
+
+$$\boldsymbol\Sigma=\boldsymbol{AA^\prime}+\boldsymbol{D}$$ 
+
+如果 $\boldsymbol{A}$ 只有少数几列，则上述分解式揭示了 $\boldsymbol{\Sigma}$ 的一个简单结构。由于 $\boldsymbol{D}$ 是对角矩阵，故 $\boldsymbol{\Sigma}$ 的非对角线元素可由 $\boldsymbol{A}$ 的元素确定，即因子载荷完全决定了原始变量之间的协方差。具体有：
+
+$$\sigma_{ij}=a_{i1} a_{j1}+a_{i2} a_{j2}+\cdots+a_{im} a_{jm}, \quad 1 \leq i \neq j \leq p$$
+  
+如果 $\boldsymbol{x}$ 为各分量已标准化了的随机向量，则 $\Sigma$ 就是相关阵 $\boldsymbol{R}$，即有
+  
+$$\boldsymbol{R}=\boldsymbol{A} \boldsymbol{A}^{\prime}+\boldsymbol{D}$$
+
+相应地有
+
+$$\rho_{i j}=a_{i 1} a_{j 1}+a_{i 2} a_{j 2}+\cdots+a_{i m} a_{j m}, \quad 1 \leq i \neq j \leq p$$
+
+若取 $\boldsymbol{A}=\Sigma^{1/2}, \boldsymbol{D}=\mathbf{0}$，则有分解式
+
+$$\Sigma=\Sigma^{1 / 2} \Sigma^{1 / 2}+\mathbf{0}$$
+  
+此时 $m=p$，没有达到降维目的，故所作的因子分析没有意义。
+  
+出于降维的需要, 我们常常希望 $m$ 要比 $p$ 小得多, 这样前述 $\boldsymbol{\Sigma}$ 的分解式通常只能近似成立, 即有
+  
+$$\Sigma \approx \boldsymbol{A} \boldsymbol{A}^{\prime}+\boldsymbol{D}$$
+
+近似程度越好, 表明因子模型拟合得越好。
+
+在因子数 $m$ 的选择上，我们既希望 $m$ 尽可能小又希望因子模型的拟合尽可能好，而这两个目标是彼此矛盾的，实践中我们应确定一个折中的、合理的 $m$。  
+
+**因子载荷是不唯一的**
+
+* 可以证明因子载荷矩阵 $A$ 是不唯一的，在实际应用中常常利用这一点，通过因子的旋转，使得新的因子有更好的实际意义。
+
+**因子载荷矩阵 $A$ 的统计意义**
+  
+* $A$ 的元素
+
+$\operatorname{Cov}(\boldsymbol{x}, \boldsymbol{f})=\operatorname{Cov}(\boldsymbol{A} \boldsymbol{f}+\boldsymbol{\varepsilon}, \boldsymbol{f})=\boldsymbol{A V}(\boldsymbol{f})+\operatorname{Cov}(\boldsymbol{\varepsilon}, \boldsymbol{f})=\boldsymbol{A}$  
+
+或
+
+$$\operatorname{Cov}\left(x_{i}, f_{j}\right)=a_{i j}, \quad i=1,2, \mathrm{~L}, p, \quad j=1,2, \cdots, m$$ 
+
+上式表明，因子载荷矩阵中的元素就是原始变量与因子的协方差矩阵中的元素。
+
+若 $\boldsymbol{x}$ 为各分量已标准化了的随机向量, 则
+
+$$\begin{aligned}
+\rho\left(x_{i}, f_{j}\right) &=\frac{\operatorname{Cov}\left(x_{i}, f_{j}\right)}{\sqrt{V\left(x_{i}\right) V\left(f_{j}\right)}}=\operatorname{Cov}\left(x_{i}, f_{j}\right)=a_{i j} \\
+i &=1,2, \cdots, p, \quad j=1,2, \cdots, m
+\end{aligned}$$
+
+上式表明，因子载荷矩阵中的元素还等于原始变量与因子的相关系数矩阵中的元素。
+  
+**$A$ 的行元素平方和**
+
+* $p$ 维向量 $x$ 中的元素 $x_i$ 的方差可表示为：
+
+$$\begin{aligned}
+V\left(x_{i}\right) &=a_{i 1}^{2} V\left(f_{1}\right)+a_{i 2}^{2} V\left(f_{2}\right)+\cdots+a_{i m}^{2} V\left(f_{m}\right)+V\left(\varepsilon_{i}\right) \\
+&=a_{i 1}^{2}+a_{i 2}^{2}+\cdots+a_{i m}^{2}+\sigma_{i}^{2}, \quad i=1,2, \cdots, p
+\end{aligned}$$
+
+令 
+
+$$h_{i}^{2}=\sum_{j=1}^{m} a_{i j}^{2}, \quad i=1,2, \cdots, p, \quad h_{i}^{2}$$  
+
+则 $h_{i}^{2}$ 可看成是全部公共因子 $f_{1}, f_{2}, \cdots, f_{m}$ 对变量 $x_{i}$ 的方差贡献，称为共性方差，它反映了全部公共因子对变量 $x_{i}$ 的总的影响，而 $\sigma_{i}^{2}$ 是特殊因子 $\varepsilon_{i}$ 对变量 $x_{i}$ 的方差贡献，称为特殊方差。
+
+$\sigma_{ii}=h_{i}^{2}+\sigma_{i}^{2}, \quad i=1,2, \cdots, p$，它表示 $x_i$ 的方差可分解为共性方差与特殊方差之和。
+
+当 $x$ 为各分量已标准化了的随机向量时，$\sigma_{ii}=1$，此时有
+
+$$h_{i}^{2}+\sigma_{i}^{2}=1, \quad i=1,2, \cdots, p$$
+
+也就是说，$A$ 的行元素平方和反映了全部因子对变量 $x_i$ 方差的联合贡献。
+
+**$A$ 的列元素平方和**
+
+$$\begin{aligned}
+\sum_{i=1}^{p} V\left(x_{i}\right) &=\sum_{i=1}^{p} a_{i 1}^{2} V\left(f_{1}\right)+\cdots+\sum_{i=1}^{p} a_{i m}^{2} V\left(f_{m}\right)+\sum_{i=1}^{p} V\left(\varepsilon_{i}\right) \\
+&=g_{1}^{2}+\cdots+g_{m}^{2}+\sum_{i=1}^{p} \sigma_{i}^{2}
+\end{aligned}$$
+
+其中
+
+$$g_{j}^{2}=\sum_{i=1}^{p} a_{i j}^{2}, \quad j=1,2, \cdots, m$$
+
+$g_{j}^{2}$ 反映了特定公共因子 $f_{j}$ 对整体 $p$ 维向量 $x$ 的影响，是衡量公共因子 $f_{j}$ 重要性的一个尺度，可视为公共因子 $f_{j}$ 对整体 $p$ 维向量 $x$ 的总方差贡献。
+
+也就是说，$A$ 的列元素平方和反映了某个特定公共因子对整体 $p$ 维向量 $x$ 的联合贡献。
+
+**$A$ 的各个元素的平方和**
+
+因子载荷矩阵 $A$ 中的各个元素的平方和反映了全部公共因子对整体 $p$ 维向量 $x$ 总方差的累计贡献。
+
+在正交因子模型中虽然全部因子可 $100\%$ 地解释原始 $p$ 维向量 $x$ 中各个分量之间的所有协方差或相关系数，但并不能保证这些因子一定能解释 $x_1,x_2,\cdots,x_p$ 总方差的多大比例。理论上该比例可以是较低的，甚至很低。
+
+尽管如上所述，但在因子分析的许多实践中，因子模型在拟合得好的同时，公共因子所解释的总方差的累计比例往往也是较高的。正因如此，因子分析常常如同主成分分析那样用于分析样品之间的差异性。在此种应用中，公共因子所解释的总方差的累计比例需要达到一个较高的水平。
+
+## 因子分析的参数估计
+
+### 主成分法
+ 
+设样本协差阵 $S$ 的特征值依次为 $\lambda_1,\lambda_2,\cdots,\lambda_p$，其相应的正交单位特征向量依次为 $t_1,t_2,\cdots,t_p$。选取相对较小的因子数 $m$，并使得累计贡献率达到一个较高的百分比，则 $S$ 可近似分解为：
+
+$$S\approx AA^\prime+D$$
+
+其中，$A$ 和 $D$ 就是因子模型的一个主成分解。
+
+对主成分解，$f_j$ 对 $x$ 的总方差贡献为 $\lambda_j$。当因子数 $m$ 增加时，原来因子的估计载荷保持不变。
+
+$S\approx AA^\prime+D$ 的近似程度越好，表明因子模型拟合得越好。
+  
+当 $p$ 个原始变量的单位不同或虽单位相同但各变量的方差相差较大时，我们应首先对原始变量作标准化变换，也就是从 $R$ 出发求解。
+  
+由于因子分析中强调用少数几个因子来描述原始变量间的协方差或相关系数而非方差，所以相比于主成分分析，因子分析有更多的场合适合从 $R$ 出发。
+  
+主成分法与主成分分析有着很相似的名称，两者很容易混淆。虽然第 $j$ 个因子与第 $j$ 个主成分的解释完全相同，但主成分法与主成分分析本质上却是两个不同的概念。主成分法是因子分析中的一种参数估计方法，它并不计算任何主成分，且旋转后的因子解释一般就与主成分明显不同了。
+
+在 R 中，主成分法的因子分析使用程序包 psych 中的函数 principal，其中： 
+
+* 参数 r：表示相关矩阵，如果向 r 传入的是原始数据，函数 principal 会首先对原始数据计算相关矩阵。
+
+* 参数 nfactors：表示所要提取的因子个数，默认设置未 nfactors = 1。
+
+* 参数 rotate：表示对因子使用的旋转方法，可取 "none"、"varimax"、"quartimax"、"promax"、"oblimin"、"simplimax"、以及 "cluster"，最常用的是 "varimax"（默认设置）。
+
+* 参数 covar：如果采用默认设置 covar = FALSE，表示从相关矩阵出发。
+
+* scores：表示是否需要计算因子得分，默认为 scores = "regression"，
+
+* fm：指定提取公共因子的方法，默认为 fm = "minres"（极小残差法）。此外还可以设置
+
+  - fm = "ml"（极大似然法）、"pa"（主因子法）、"wls"（加权最小二乘法）、"gls"（广义最小二乘法）
+
+* residuals：是否显示残差矩阵
+  
+在 R 中，进行因子分析之前可使用程序包 psych 中的函数 fa.parallel 来帮助确定合适的因子数量。函数 fa.parallel 是将原始数据与相同维度的随机数矩阵相比较，从而确定最合适的因子数量，所绘制的图形称为平行碎石图。其中：
+
+* 参数 fm：表示所要使用的因子分析方法，可取 "minres"、"ml"、"uls"、"wls"、"gls"、"pa"，默认设置 fm = "minres"
+
+* 参数 fa：表示要使用哪种特征值，默认设置 fa = "both" 表示同时使用主成分特征值（pc）和主因子特征值（pa）。
+
+* 参数 SMC = TRUE：表示在使用 SMC 估计共性方差之后再计算特征值。
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/exec6.6.xlsx")
+  mydf <- tibble::column_to_rownames(.data = mydf, var = "nation")
+  attach(what = mydf)
+
+# 绘制平行碎石图：用于确定因子数量
+  library(psych)
+  
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  fa.parallel(x = mydf, fm = "minres", fa = "pc", ylab = "特征值", SMC = TRUE)
+  panel.last = grid()
+  par(opar)
+
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+  
+# 因子分析：使用主成分法，未旋转，从相关矩阵出发，以列表形式返回结果
+  mydf.pc <- principal(r = mydf, nfactors = 2, residuals = TRUE, 
+                       rotate = "none", covar = FALSE, scores = TRUE, 
+                       method = "regression")
+  summary(object = mydf.pc)
+  names(x = mydf.pc)
+  
+# 提取因子的数量
+  mydf.pc$factors
+
+# 提取因子载荷矩阵：列元素的平方和、因子所解释的总方差的比例及累计比例
+  mydf.pc$loadings
+
+# 提取共性方差
+  mydf.pc$communality
+
+# 提取每个因子能够解释的全体变量的方差：特征值
+  mydf.pc$values
+
+# 计算因子得分
+  scores <- mydf.pc$scores
+  head(x = scores, n = 3)
+
+# 提取残差矩阵：残差矩阵对角线上的元素就是特殊方差
+  mydf.pc$residual
+
+# 检查因子模型对原始相关矩阵的拟合程度
+  mydf.pc$fit
+
+# 检查非对角线上元素的再现程度：原始数据的再现程度
+  mydf.pc$fit.off
+
+# 检查使用了哪种因子旋转方法
+  mydf.pc$rotation
+
+# 提取观测数量：原始数据的样本容量
+  mydf.pc$n.obs
+  
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 绘制因子载荷矩阵图
+  library(psych)
+  fa.diagram(fa.results = mydf.pc, labels = rownames(x = mydf), simple = FALSE, 
+             marg = c(4,4, 2, 2), cex = 0.8)
+  
+```  
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制因子得分散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = scores[, 1], y = scores[, 2], panel.first = grid(), type = "p", 
+       pch = 20, col = "blue", xlab = "第一因子", ylab = "第二因子", 
+       main = "因子得分散点图")
+  maptools::pointLabel(x = scores[, 1], y = scores[, 2], cex = 0.8, 
+                       col = "steelblue", labels = rownames(x = mydf),  
+                       method = "SANN", allowSmallOverlap = FALSE)
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+  detach(name = mydf)
+
+```
+
+### 主因子法
+
+假定原始向量 $\boldsymbol{x}$ 的各分量已作了标准化变换。如果随机向量 $\boldsymbol{x}$ 满足正交因子模型, 则有
+
+$$\boldsymbol{R}=\boldsymbol{A} \boldsymbol{A}^{\prime}+\boldsymbol{D}$$
+
+
+令
+
+$$\boldsymbol{R}^{*}=\boldsymbol{R}-\mathrm{D}=\boldsymbol{A} \boldsymbol{A}^{\prime}$$
+
+则称 $R^{*}$ 为 $x$ 的约相关矩阵。
+
+$\boldsymbol{R}^{*}$ 中的第 $i$ 个对角线元素是 $h_{i}^{2}$，而不像 $\boldsymbol{R}$ 中是 $1$，非对角线元素与 $\boldsymbol{R}$ 中是完全一样的，并且 $\boldsymbol{R}^{*}$ 也是一个非负定矩阵。
+
+约相关矩阵 $\boldsymbol{R}^{*}$ 可估计为：
+
+$$\boldsymbol{R}^{*}=\hat{R}-\hat{D}$$
+
+其中，$\hat{\boldsymbol{R}}=\left(r_{i j}\right), \hat{\boldsymbol{D}}=\operatorname{diag}\left(\hat{\sigma}_{1}^{2}, \hat{\sigma}_{2}^{2}, \cdots, \hat{\sigma}_{p}^{2}\right), \hat{h}_{i}^{2}=1-\hat{\sigma}_{i}^{2}$ 是 $h_{i}^{2}$ 的初始估计。
+
+又设 $\hat{\boldsymbol{R}}^{*}$ 的前 $m$ 个特征值依次为 $\hat{\lambda}_{1}^{*} \geq \hat{\lambda}_{2}^{*} \geq \cdots \geq \hat{\lambda}_{m}^{*}>0$，相应的正交单位特征向量为 $\hat{\boldsymbol{t}}_{1}^{*}, \hat{\boldsymbol{t}}_{2}^{*}, \cdots, \hat{\boldsymbol{t}}_{m}^{*}$，则 $\boldsymbol{A}$ 的主因子解为：
+
+$$\hat{\boldsymbol{A}}=\left(\sqrt{\hat{\lambda}_{1}^{*}} \hat{\boldsymbol{t}}_{1}^{*}, \sqrt{\hat{\lambda}_{2}^{*}} \hat{\boldsymbol{t}}_{2}^{*}, \cdots, \sqrt{\hat{\lambda}_{m}^{*}} \hat{\boldsymbol{t}}_{m}^{*}\right)$$
+
+由此可更新 $h_{i}^{2}$ 的估计，同时更新 $\sigma_{i}^{2}$ 的估计，并将其作为 $\sigma_{i}^{2}$ 的最终估计。即，
+
+$$\hat{\sigma}_{i}^{2}=1-\hat{h}_{i}^{2}=1-\sum_{j=1}^{m} \hat{a}_{i j}^{2}, \quad i=1,2, \cdots, p$$
+
+特殊（或共性）方差的常用初始估计方法：
+
+* 取 $\hat{\sigma}_{i}^{2}=1 / r_{ii}$，其中 $r_{ii}$ 是 $\hat{\boldsymbol{R}}^{-1}$ 的第 $i$ 个对角线元素，此时共性方差的估计为 $\hat{h}_{i}^{2}=1-\hat{\sigma}_{i}^{2}$，它是 $x_{i}$ 和其他 $p-1$ 个变量间（样本）复相关系数的平方。
+
+  - 该初始估计方法最为常用，但一般要求 $\hat{\boldsymbol{R}}$ 是满秩的。如果 $\hat{\boldsymbol{R}}$ 不满秩，则可考虑下面的两种方法。
+
+* 取 $\hat{h}_{i}^{2}=\max _{j \neq i}\left|r_{i j}\right|$，此时 $\hat{\sigma}_{i}^{2}=1-\hat{h}_{i}^{2}$。 
+
+* 取 $\hat{h}_{i}^{2}=1$ 此时，$\hat{\sigma}_{i}^{2}=0$，有 $\hat{\boldsymbol{R}}^{*}=\hat{\boldsymbol{R}}$，由此得到的 $\hat{A}$ 是一个主成分解。
+
+在 R 中，主因子法与极大似然法的因子分析使用程序包 psych 中的函数 fa，其中： 
+
+* 参数 r：相关矩阵或原始数据矩阵
+
+* 参数 nfactors：提取的因子个数，默认为 1
+
+* n.obs：观测数，参数 r 为相关系数矩阵时需要指定
+
+* rotate：因子旋转方法，默认为 rotate = "oblimin"（斜交转轴法），常用的是 "varimax"（最大方差法）或 "none"（不旋转）
+
+* scores：设定是否需要计算因子得分，默认为 scores = "regression"
+
+* fm：指定提取公共因子的方法，默认为 fm = "minres"（极小残差法）。此外还可以设置
+
+  - fm = "ml"（极大似然法）、"pa"（主因子法）、"wls"（加权最小二乘法）、"gls"（广义最小二乘法）
+
+* residuals：是否显示残差矩阵
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制平行碎石图：用于确定最合适的因子数量
+  library(psych)
+
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  fa.parallel(x = mydf, fm = "minres", fa = "fa", SMC = TRUE)
+  panel.last = grid()
+  par(opar)
+
+  detach(name = mydf)
+
+```
+  
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 因子分析：使用主因子法，未旋转，取因子个数为 2，以列表形式返回结果
+  library(psych)
+  mydf.pa <- fa(r = mydf, nfactors = 2, rotate = "none", scores = "regression", 
+                residuals = TRUE, SMC = TRUE, covar = FALSE, fm = "pa")
+  summary(object = mydf.pa)
+  names(x = mydf.pa)
+  
+# 提取因子数量
+  mydf.pa$factors
+
+# 提取因子载荷矩阵及因子方差贡献率：列元素的平方和、因子所解释的总方差的比例及累计比例
+  mydf.pa$loadings
+  
+# 提取共性方差
+  mydf.pa$communality
+
+# 提取每个因子能够解释的全体变量的方差：特征值
+  mydf.pa$e.values
+
+# 计算因子得分
+  scores <- mydf.pa$scores
+  head(x = scores, n = 3)
+
+# 提取残差矩阵：残差矩阵对角线上的元素就是特殊方差
+  mydf.pa$residual
+
+# 检查因子模型对原始相关矩阵的拟合程度
+  mydf.pa$fit
+
+# 检查非对角线上元素的再现程度：原始数据的再现程度
+  mydf.pa$fit.off
+
+# 检查使用了哪种因子旋转方法
+  mydf.pa$rotation
+
+# 提取观测数量：原始数据的样本容量
+  mydf.pa$n.obs
+  
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制因子得分散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = scores[, 1], y = scores[, 2], panel.first = grid(), type = "p", 
+       pch = 20, col = "blue", xlab = "第一因子", ylab = "第二因子", 
+       main = "因子得分散点图")
+  maptools::pointLabel(x = scores[, 1], y = scores[, 2], cex = 0.8, 
+                       col = "steelblue", labels = rownames(x = mydf),  
+                       method = "SANN", allowSmallOverlap = FALSE)
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+  detach(name = mydf)
+
+```
+
+### 极大似然法
+
+设 $\boldsymbol{f} \sim N_{m}(\mathbf{0}, \boldsymbol{I}),\; \boldsymbol{\varepsilon} \sim N_{p}(\mathbf{0},\boldsymbol{D})$ 且相互独立，则由样本 $\boldsymbol{x}_{1}, \boldsymbol{x}_{2}, \cdots, \boldsymbol{x}_{n}$ 可计算得到 $(\boldsymbol{\mu}, \boldsymbol{A}, \boldsymbol{D})$ 的极大似然估计 $(\hat{\boldsymbol{\mu}}, \hat{\boldsymbol{A}}, \hat{\boldsymbol{D}})$。 其中，$\hat{\boldsymbol{\mu}}=\overline{\boldsymbol{x}}, \hat{\boldsymbol{A}}$ 和 $\hat{\boldsymbol{D}}$ 一般可用迭代方法求得。
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 因子分析：使用极大似然法，未旋转，取因子个数为 2，以列表形式返回结果
+  library(psych)
+  mydf.ml <- fa(r = mydf, nfactors = 2, rotate = "none", scores = "regression", 
+                residuals = TRUE, SMC = TRUE, fm = "ml", covar = FALSE)
+  summary(object = mydf.ml)
+  names(x = mydf.ml)
+
+# 提取因子数量
+  mydf.ml$factors
+
+# 提取因子载荷矩阵及因子方差贡献率：列元素的平方和、因子所解释的总方差的比例及累计比例
+  mydf.ml$loadings
+  
+# 提取共性方差
+  mydf.ml$communality
+
+# 提取每个因子能够解释的全体变量的方差：特征值
+  mydf.ml$e.values
+
+# 计算因子得分
+  scores <- mydf.ml$scores
+  head(x = scores, n = 3)
+
+# 提取残差矩阵：残差矩阵对角线上的元素就是特殊方差
+  mydf.ml$residual
+
+# 检查因子模型对原始相关矩阵的拟合程度
+  mydf.ml$fit
+
+# 检查非对角线上元素的再现程度：原始数据的再现程度
+  mydf.ml$fit.off
+
+# 检查使用了哪种因子旋转方法
+  mydf.ml$rotation
+
+# 提取观测数量：原始数据的样本容量
+  mydf.ml$n.obs
+  
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制因子得分散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = scores[, 1], y = scores[, 2], panel.first = grid(), type = "p", 
+       pch = 20, col = "blue", xlab = "第一因子", ylab = "第二因子", 
+       main = "因子得分散点图")
+  maptools::pointLabel(x = scores[, 1], y = scores[, 2], cex = 0.8, 
+                       col = "steelblue", labels = rownames(x = mydf),  
+                       method = "SANN", allowSmallOverlap = FALSE)
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+  detach(name = mydf)
+
+```
+
+## 因子旋转
+
+因子的解释带有一定的主观性，我们常常通过旋转因子的方法来减少这种主观性且使之更易解释。
+
+因子是否易于解释，很大程度上取决于因子载荷矩阵 $A$ 的元素结构。假设 $A$ 是从 $R$ 出发求得的，则有 $|a_{ij}|\leq 1$。
+
+如果 $A$ 的所有元素都接近 $0$ 或 $\pm 1$，则模型的因子就易于解释。反之，如果 $A$ 的元素多数居中，不大不小，则对模型的因子往往就不易作出解释，此时应考虑进行因子旋转，使得旋转之后的载荷矩阵在每一列上元素的绝对值尽量地大小拉开，也就是尽可能多地使其中的一些元素接近于 $0$ ，另一些元素接近于 $\pm 1$。
+
+* 因子的正交旋转不改变因子的共性方差，且共性方差为旋转后坐标点到原点的平方欧氏距离。
+
+* 因子的正交旋转不改变 $m$ 个因子的累计贡献率。
+
+当因子数 $m>2$ 时，我们一般就无法通过目测确定旋转，此时需要通过一种算法来给出正交矩阵 $T$，不同的算法构成了正交旋转的各种不同方法，在这些方法中使用最普遍的是最大方差旋转法。 
+
+### 主成分法：使用最大方差旋转法
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+  
+# 因子分析：使用主成分法，使用最大方差旋转法，从相关矩阵出发，以列表形式返回结果
+  mydf.pc <- principal(r = mydf, nfactors = 2, residuals = TRUE, 
+                       rotate = "varimax", covar = FALSE, scores = TRUE, 
+                       method = "regression")
+  summary(object = mydf.pc)
+  names(x = mydf.pc)
+  
+# 提取因子的数量
+  mydf.pc$factors
+
+# 提取因子载荷矩阵：列元素的平方和、因子所解释的总方差的比例及累计比例
+  mydf.pc$loadings
+
+# 提取共性方差
+  mydf.pc$communality
+
+# 提取每个因子能够解释的全体变量的方差：特征值
+  mydf.pc$values
+
+# 计算因子得分
+  scores <- mydf.pc$scores
+  head(x = scores, n = 3)
+
+# 提取残差矩阵：残差矩阵对角线上的元素就是特殊方差
+  mydf.pc$residual
+
+# 检查因子模型对原始相关矩阵的拟合程度
+  mydf.pc$fit
+
+# 检查非对角线上元素的再现程度：原始数据的再现程度
+  mydf.pc$fit.off
+
+# 检查使用了哪种因子旋转方法
+  mydf.pc$rotation
+
+# 提取观测数量：原始数据的样本容量
+  mydf.pc$n.obs
+  
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制因子得分散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = scores[, 1], y = scores[, 2], panel.first = grid(), type = "p", 
+       pch = 20, col = "blue", xlab = "第一因子", ylab = "第二因子", 
+       main = "因子得分散点图")
+  maptools::pointLabel(x = scores[, 1], y = scores[, 2], cex = 0.8, 
+                       col = "steelblue", labels = rownames(x = mydf),  
+                       method = "SANN", allowSmallOverlap = FALSE)
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+  detach(name = mydf)
+
+```
+
+### 主因子法：使用最大方差旋转法
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 因子分析：使用主因子法，使用最大方差旋转法，取因子个数为 2，以列表形式返回结果
+  library(psych)
+  mydf.pa <- fa(r = mydf, nfactors = 2, rotate = "varimax",SMC = TRUE, fm = "pa",
+                scores = "regression", residuals = TRUE, covar = FALSE)
+  summary(object = mydf.pa)
+  names(x = mydf.pa)
+  
+# 提取因子数量
+  mydf.pa$factors
+
+# 提取因子载荷矩阵及因子方差贡献率：列元素的平方和、因子所解释的总方差的比例及累计比例
+  mydf.pa$loadings
+  
+# 提取共性方差
+  mydf.pa$communality
+
+# 提取每个因子能够解释的全体变量的方差：特征值
+  mydf.pa$e.values
+
+# 计算因子得分
+  scores <- mydf.pa$scores
+  head(x = scores, n = 3)
+
+# 提取残差矩阵：残差矩阵对角线上的元素就是特殊方差
+  mydf.pa$residual
+
+# 检查因子模型对原始相关矩阵的拟合程度
+  mydf.pa$fit
+
+# 检查非对角线上元素的再现程度：原始数据的再现程度
+  mydf.pa$fit.off
+
+# 检查使用了哪种因子旋转方法
+  mydf.pa$rotation
+
+# 提取观测数量：原始数据的样本容量
+  mydf.pa$n.obs
+  
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制因子得分散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = scores[, 1], y = scores[, 2], panel.first = grid(), type = "p", 
+       pch = 20, col = "blue", xlab = "第一因子", ylab = "第二因子", 
+       main = "因子得分散点图")
+  maptools::pointLabel(x = scores[, 1], y = scores[, 2], cex = 0.8, 
+                       col = "steelblue", labels = rownames(x = mydf),  
+                       method = "SANN", allowSmallOverlap = FALSE)
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+  detach(name = mydf)
+
+```
+
+### 极大似然法：使用最大方差旋转法
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 因子分析：使用极大似然法，使用最大方差旋转法，取因子个数为 2，以列表形式返回结果
+  library(psych)
+  mydf.ml <- fa(r = mydf, nfactors = 2, rotate = "vatimax", scores = "regression", 
+                residuals = TRUE, SMC = TRUE, fm = "ml", covar = FALSE)
+  summary(object = mydf.ml)
+  names(x = mydf.ml)
+
+# 提取因子数量
+  mydf.ml$factors
+
+# 提取因子载荷矩阵及因子方差贡献率：列元素的平方和、因子所解释的总方差的比例及累计比例
+  mydf.ml$loadings
+  
+# 提取共性方差
+  mydf.ml$communality
+
+# 提取每个因子能够解释的全体变量的方差：特征值
+  mydf.ml$e.values
+
+# 计算因子得分
+  scores <- mydf.ml$scores
+  head(x = scores, n = 3)
+
+# 提取残差矩阵：残差矩阵对角线上的元素就是特殊方差
+  mydf.ml$residual
+
+# 检查因子模型对原始相关矩阵的拟合程度
+  mydf.ml$fit
+
+# 检查非对角线上元素的再现程度：原始数据的再现程度
+  mydf.ml$fit.off
+
+# 检查使用了哪种因子旋转方法
+  mydf.ml$rotation
+
+# 提取观测数量：原始数据的样本容量
+  mydf.ml$n.obs
+  
+  detach(name = mydf)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制因子得分散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = scores[, 1], y = scores[, 2], panel.first = grid(), type = "p", 
+       pch = 20, col = "blue", xlab = "第一因子", ylab = "第二因子", 
+       main = "因子得分散点图")
+  maptools::pointLabel(x = scores[, 1], y = scores[, 2], cex = 0.8, 
+                       col = "steelblue", labels = rownames(x = mydf),  
+                       method = "SANN", allowSmallOverlap = FALSE)
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+  detach(name = mydf)
+
+```
+
+## 因子得分 
+
+在前面的分析中，我们主要做了以下工作：
+
+* 使用因子模型并根据样本选择合适的因子数量和估计出因子载荷矩阵，然后对因子给出合理的解释。
+  
+* 如果对因子难以做出解释或希望得到更好的解释，则进一步做因子旋转。
+  
+如果希望对因子做进一步的深入分析，如对降维后的各个样品进行比较和分析，则需要计算因子得分。计算因子得分有两种方法：
+
+* 回归法：回归法也称汤姆森（Thompson，1951）因子得分。
+
+* 采用类似于回归分析中加权最小二乘估计方法得到的因子得分称为称为巴特莱特（Bartlett，1937）因子得分。
+
+* 回归法相比加权最小二乘法有着更高的估计精度，因而在实际应用中，回归法应用得最为广泛。
+
+需要指出，计算因子得分时必须同时使用全部因子，不可将其中一个或两个单独拿出来使用，否则因子所含的信息量是不够的，以
+致不足以代表原始变量。
+ 
+# 对应分析
+
+## 引言
+
+对应分析（Correspondence analysis）又称为相应分析，也称 $R—Q$ 分析，它是在因子分析基础发展起来的一种多元统计分析方法。对应分析主要通过分析由定性变量构成的列联表来揭示变量之间的关系。
+
+随着计算机软件的应用，对应分析的方法在社会科学和自然科学领域都有着广泛的应用价值。特别是近年来在市场调查与研究中，有关市场细分、产品定位、品牌形象以及满意度研究等领域正得到越来越广泛的重视和应用。
+  
+对数据作对应分析之前，需要先了解因素间是否独立，如果因素之间相互独立，则没有必要进行对应分析。
+  
+## 行轮廓和列轮廓
+  
+### 对应矩阵
+
+对应矩阵定义为：
+
+$$\boldsymbol{P}=\left(p_{i j}\right)=\left(n_{i j} / n\right)$$
+
+行边缘频率构成的列向量:
+
+$$\boldsymbol{r}=\boldsymbol{P} \mathbf{1}=\left(\begin{array}{c}
+p_{1} \\
+p_{2} \\
+\vdots \\
+p_{p .}
+\end{array}\right)$$
+
+其中 $\mathbf{1}=(1,1, \cdots, 1)^{\prime}: p \times 1$。
+
+列边缘频率构成的行向量:
+
+$$\boldsymbol{c}^{\prime}=\mathbf{1}^{\prime} \boldsymbol{P}=\left(p_{\cdot 1}, p_{\cdot 2}, \cdots, p_{\cdot q}\right)$$
+
+其中，$$\mathbf{1}=(1,1, \cdots, 1)^{\prime}: q \times 1$$
+
+### 行、列轮廓
+  
+行轮廓矩阵
+
+$$\boldsymbol{R}=\left(\begin{array}{c}
+\boldsymbol{r}_{1}^{\prime} \\
+\boldsymbol{r}_{2}^{\prime} \\
+\vdots \\
+\boldsymbol{r}_{p}^{\prime}
+\end{array}\right)$$
+
+列轮廓矩阵
+
+$$\boldsymbol{C}=\left(\boldsymbol{c}_{1}, \boldsymbol{c}_{2}, \cdots, \boldsymbol{c}_{q}\right)$$
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/examp9.2.1.xlsx")
+  mytab <- xtabs(frequency ~ status + psychhealth, data = mydf)
+  
+# 对应表：含行列轮廓
+  gmodels::CrossTable(x = mytab, digits = 4, expected = TRUE, prop.r = TRUE,
+                      prop.c = TRUE, prop.t = TRUE, chisq = TRUE, 
+                      prop.chisq = TRUE)
+
+```
+
+## 总惯量
+
+### 总惯量的定义
+
+总惯量表示为：
+
+$$\sum_{i=1}^{p} \sum_{j=1}^{q} \frac{\left(p_{i j}-p_{i \cdot} \cdot p_{\cdot j}\right)^{2}}{p_{i \cdot} p_{\cdot j}}$$
+
+总惯量的值越大, 表明实际频率 $p_{ij}$ 与行、列变量之间独立情形下的期望频率 $p_{i.}p_{.j}$ 总体上差异就越大，也就是行、列变量之间越是不独立。
+  
+总惯量可作为行、列变量之间关联性的度量。
+
+* 总惯量越大（小），表明行、列变量之间的关联性越强（弱）。
+
+总惯量也可度量行轮廓之间的总变差和列轮廓之间的总变差。
+
+* 总惯量越大（小），表明行（列）轮廓之间的差异性就越大（小）
+
+总惯量为零，意味着行变量与列变量基本上是独立的或者说是近似独立的。行变量与列变量独立，意味着总惯量接近于零。
+
+* 行变量与列变量独立，或总惯量为零，一般都没有必要将这两个变量构造成列联表 
+
+### 总惯量的分解
+  
+$$\boldsymbol{P}-\boldsymbol{r} \boldsymbol{c}^{\prime}=\left(p_{i j}-p_{i \cdot} p_{\cdot j}\right)$$ 是对 $\boldsymbol{P}$ 的中心化, 对 $\boldsymbol{P}$  的标准化是令 
+
+$$\boldsymbol{Z}=\left(z_{i j}\right)$$ 
+
+其中，
+
+$$z_{i j}=\frac{p_{i j}-p_{i \cdot} \cdot p_{\cdot j}}{\sqrt{p_{i \cdot} \cdot p_{\cdot j}}}$$
+
+记 $k=\operatorname{rank}(\boldsymbol{Z})$， 有 $k \leq \min \left(p-1,q-1\right)$。
+
+设 $\lambda_{1}^{2} \geq \lambda_{2}^{2} \geq \cdots \geq \lambda_{k}^{2}>0$ 是 
+$\boldsymbol{Z} \boldsymbol{Z}^{\prime}$ 的正特征值。
+
+$$\text{总惯量}=\sum_{i=1}^{p} \sum_{j=1}^{q} \frac{\left(p_{i j}-p_{i \cdot} p_{\cdot j}\right)^{2}}{p_{i \cdot} \cdot p_{\cdot j}}=\sum_{i=1}^{p} \sum_{j=1}^{q} z_{i j}^{2}=\operatorname{tr}\left(\boldsymbol{Z} \boldsymbol{Z}^{\prime}\right)=\sum_{i=1}^{k} \lambda_{i}^{2}$$  
+
+## 行、列轮廓的坐标  
+
+### 数据的中心和变差
+
+在第 $i$ 坐标轴上，$0$ 既可以看作是 $p$ 个行点坐标 $x_{1 i}, x_{2 i}, \cdots, x_{p i}$ 的中心, 也可看作是 $q$ 个列点 坐标 $y_{1 i}, y_{2 i}, \cdots, y_{q i}$ 的中心。
+
+$$\sum_{j=1}^{p} p_{j \cdot} x_{ji}^{2}=\sum_{j=1}^{q} p_{\cdot j} y_{ji}^{2}=\lambda_{i}^{2}, \quad i=1,2, \cdots, k$$
+
+称 $\lambda_{i}^{2}$  为第 $i$ 主惯量或第 $i$ 惯量，$i=1,2, \cdots, k$。
+
+可见, 在第 $i$ 坐标轴上，$\lambda_{i}^{2}$ 既反映了 $p$ 个行点坐标 $x_{1 i}, x_{2 i}, \cdots, x_{p i}$ 的变差，也反映了 $q$ 个列点坐标 $y_{1 i}, y_{2 i}, \cdots, y_{q i}$ 的变差。
+  
+## 对应分析图
+
+### 对应分析图的构建  
+
+当 $\sum_{i=1}^{m}{\lambda_i}/\sum_{i=1}^{k}{\lambda_i}$ 足够大时，前 $m$ 维集中了足够多的关于列联表关联性或所有变差的信息，此时可将 $k$ 维坐标系降维成由其前 $m$ 维构成的坐标系进行对应分析。
+
+* 出于作图的目的，我们通常取维数 $m=2$，偶尔取 $m=1$ 或 $m=3$。
+
+* 可将各（中心化的）行轮廓和列轮廓在 $m$ 维坐标系上用点标出，并同时作到同一张图上。
+
+### 行（列）点之间的距离
+  
+如果两个行（列）点越接近（远离），则表明相应的两个行（列）轮廓就越相似（不相似）。
+
+### 行点和列点相近的意涵
+
+* 如果一个行点和一个列点相近，则表明行、列两个变量的相应类别组合发生的实际频数一般会高于这两个变量相互独立情形下的期望频数，也就意味着该行类别与该列类别相关联。
+
+* 一般地，对于相近的行点和列点，它们离原点越远，其关联性就越强，也就是其类别组合的实际频数越会明显高于两变量独立情形下的期望频数。如果它们都在原点附近，则其关联性一般较弱、甚至可能几乎无关联性。
+
+## 对应分析示例
+
+对应分析使用程序包 ca 中的函数 ca。
+
+### 示例 1
+
+```{r}
+
+# 读取数据
+  attach(what = mydf)
+
+# 绘制行轮廓马赛克图
+  library(vcd)
+  mosaicplot(x = mytab, margin = 1, shade = TRUE, 
+             xlab = "父母社会经济地位", ylab = "心理健康状况", 
+             main = "行轮廓马赛克图")
+
+# 绘制列轮廓马赛克图
+  mosaicplot(x = mytab, margin = 2, shade = TRUE, 
+             xlab = "父母社会经济地位", ylab = "心理健康状况", 
+             main = "列轮廓马赛克图")
+  
+# 对应分析：以列表的形式返回结果，包括（主）惯量、总惯量、贡献率及累计贡献率等
+  library(ca)
+  mydf.ca <- ca(obj = mytab)
+  summary(object = mydf.ca)
+  
+  # 提取奇异值：奇异值的平方就是（主）惯量值
+  mydf.ca$sv
+  
+# 计算行点坐标
+  (X <- mydf.ca$rowcoord %*% diag(x = mydf.ca$sv))
+
+# 计算列点坐标
+  (Y <-  mydf.ca$colcoord %*% diag(x = mydf.ca$sv))
+  
+# 同时计算行点坐标与列点坐标
+  cacoord(obj = mydf.ca, type = "principal")
+  
+# 绘制对应分析图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = mydf.ca, panel.first = grid(), lines = TRUE, mass = c(TRUE, TRUE),
+       xlab = "第一主惯量", ylab = "第二主惯量", 
+       main = "心理健康状况-父母社会经济地位的对应分析图")
+  par(opar)
+  
+  detach(name = mydf)
+
+```
+
+### 示例 2  
+
+```{r}
+
+# 读取数据
+  mydf <- rio::import(file = "Data/examp9.5.2.xlsx")
+  mytab <- xtabs(频数 ~ 奶酪添加剂 + 响应, data = mydf)
+  dim(x = mytab)
+
+# 对应分析
+  library(ca)
+  mydf.ca <- ca(obj = mytab)
+  summary(object = mydf.ca)
+
+# 绘制二维对应分析图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = mydf.ca, panel.first = grid(), lines = FALSE, mass = c(TRUE, TRUE),
+       xlab = "第一主惯量", ylab = "第二主惯量", 
+       main = "奶酪添加剂-响应的对应分析图")
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)
+  
+# 绘制三维对应分析图
+  plot3d.ca(x = mydf.ca)
+  
+```
+ 
+# 典型相关分析 
+  
+## 典型相关的定义 
+
+Hotelling 于 1935 年首先提出了典型相关（Canonical Correlations）的思想。
+
+相关是指一对列变量 $x$ 与 $y$ 之间的相关性，如果将这种相关性一般化为一组列变量 $X=\{x1, x2,..., xn\}$ 与另一组列变量 $Y = \{y1, y2,..., ym\}$ 之间的相关性，这种相关性就称为典型相关。
+
+```{r}
+
+# 相关分析的基本架构
+  img <- readPNG(source = "Pictures/相关分析的基本架构.png")
+  grid.raster(image = img, name = "相关分析的基本架构")
+
+```
+  
+## 典型相关的原理
+
+典型相关是找到一对权重向量 $a$ 和 $b$ 以最大化线性组合 $a^\prime{X}$ 与 $b^\prime{Y}$ 之间的相关系数，其中 $a^\prime{x_i}$ 与 $b^\prime{y_i}$ 称为第 $i$ 个观测样例的典型得分（canonical scores）。因此，多元数据也就可以在尽量不损失数据信息的条件下降维为由 $(x_i, y_i)$ 组成的二元数据。
+  
+对每个观测样例来说，权重向量 $a$ 和 $b$ 都是相同的。
+  
+具体来说，可将线性变换表示为：
+ 
+$$U=a_{1} x_{1}+a_{2} x_{2}+\cdots+a_{p} x_{p}$$ 
+  
+$$V=b_{1} y_{1}+b_{2} y_{2}+\cdots+b_{q} y_{q}$$  
+
+$U$ 和 $V$ 称为典型变量。
+
+为了计算 $U$ 和 $V$ 需要将数据划分为分块相关矩阵
+
+```{r}
+
+# 分块相关矩阵
+  img <- readPNG(source = "Pictures/分块相关矩阵.PNG")
+  grid.raster(image = img, name = "分块相关矩阵")
+
+```
+
+矩阵 $B^{-1}C^{T}A^{-1}C$ 的特征值为 $\lambda_1>\lambda_2>\ldots>\lambda_p$，特征值对应的特征向量 $b_1,b_2,\ldots,b_p$ 就是随机向量 $Y$ 的系数 $b$，$A^{-1}C{b}$ 就是随机向量 $X$ 的系数。
+
+$$\left[\operatorname{corr}\left(\boldsymbol{u}_{\boldsymbol{i}}, \boldsymbol{v}_{\boldsymbol{i}}\right)\right]^{2}=\lambda_{i}$$
+
+### 典型变量的性质
+  
+* 每一对典型变量 $U_i$ 和 $V_i$ $i=1,2,\ldots,p$ 的标准差为 $1$。
+
+* $U_i$ 之间彼此不相关，$V_i$ 之间也彼此不相关，但是 $U_i$ 和 $V_i$ 之间是彼此相关的。
+
+## 示例
+
+```{r}
+
+# 读取数据
+  data("LifeCycleSavings", package = "datasets")
+  anyNA(x = LifeCycleSavings)
+  attach(what = LifeCycleSavings)
+
+# 绘制散点图矩阵：方法 1
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))  
+  pairs(x = LifeCycleSavings, pch = 20, col = "blue", 
+        main = "Scatter Plot Matrix for Life-Cycle Savings ")
+  par(opar)
+
+  detach(name = LifeCycleSavings)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = LifeCycleSavings)
+
+# 绘制散点图矩阵：方法 2
+  library(scatterPlotMatrix)
+  scatterPlotMatrix(data = LifeCycleSavings)
+
+  detach(name = LifeCycleSavings)
+
+```
+
+```{r}
+
+# 读取数据
+  attach(what = LifeCycleSavings)
+  
+# 计算相关系数矩阵
+  cor(LifeCycleSavings, method = "pearson")
+  
+  detach(name = LifeCycleSavings)
+
+```
+ 
+在进行典型相关分析之前，首先需要对数据进行标准化。
+
+在 R 中，典型相关分析使用程序包 stats 中的函数 cancor。
+
+```{r}
+
+# 读取数据
+  attach(what = LifeCycleSavings)
+  LifeCycleSavings_std <- datawizard::standardize(x = LifeCycleSavings)
+
+# 创建 X 矩阵 
+  X <- LifeCycleSavings_std[, 2:3]  
+ 
+# 创建 Y 矩阵 
+  Y <- LifeCycleSavings_std[, c(1, 4, 5)]
+  
+# 典型相关分析：以列表显示返回结果
+  LifeCycleSavings_cancor <- cancor(x = X, y = Y, xcenter = TRUE, ycenter = TRUE)
+  
+  # 提取典型相关系数
+  LifeCycleSavings_cancor$cor
+  
+  # 提取 X 矩阵的系数
+  LifeCycleSavings_cancor$xcoef
+  
+  # 提取 Y 矩阵的系数
+  LifeCycleSavings_cancor$ycoef
+  
+  # 提取 X 矩阵的中心
+  LifeCycleSavings_cancor$xcenter
+  
+  # 提取 Y 矩阵的中心
+  LifeCycleSavings_cancor$ycenter
+  
+  detach(name = LifeCycleSavings)
+
+```  
+
+输出结果表明：
+
+* $z_{X_1}$ and $z_{Y_1}$ 之间的相关系数为 $0.8247966$， 其中
+
+$$z_{X_1} = −0.08338007\times{x_{pop15}} + 0.06279282\times{x_{pop75}}$$
+
+$$z_{X_1} = 0.03795363\times{sr} + 0.129546\times{dpi} + 0.01196908\times{ddpi}$$
+
+```{r}
+
+# 提取相关系数
+  xcoef <- as.numeric(x = LifeCycleSavings_cancor$xcoef[, 1])
+  ycoef <- as.numeric(x = LifeCycleSavings_cancor$ycoef[, 1])
+  u1 <- as.matrix(X) %*% xcoef
+  v1 = as.matrix(x = Y) %*% ycoef
+  
+# 绘制散点图
+  
+  # 方法 1
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = u1, y = v1, panel.first = grid(), type = "p", col = "blue", 
+       pch = 20, xlab = "典型变量 1", ylab = "典型变量 2", 
+       main = "第一对典型变量间的散点图")
+  maptools::pointLabel(x = u1, y = v1, labels = rownames(x = LifeCycleSavings), 
+                       cex = 0.8, col = "steelblue", method = "SANN")
+  par(opar)
+  
+  # 方法 2
+  ggplot(mapping = aes(x = u1, y = v1)) +
+    geom_point(color = "blue") +
+    geom_smooth(formula = y ~ x, method = "lm", color = "red", se = FALSE) +
+    labs(x = "典型变量 1", y = "典型变量 2", title = "第一对典型变量间的散点图")
+  
+```  
+  
+典型相关分析还可以使用专门处理典型相关分析的程序包 CCA 中的函数 cc。
+ 
+```{r}
+
+# 读取数据
+  attach(what = LifeCycleSavings_std)
+
+# 典型相关分析：以列表显示返回结果
+  library(CCA)
+  LifeCycleSavings_cancor <- cc(X = X, Y = Y)
+  names(x = LifeCycleSavings_cancor)
+
+  # 提取典型相关系数
+  LifeCycleSavings_cancor$cor
+  
+  # 提取 X 矩阵的系数
+  LifeCycleSavings_cancor$xcoef
+  
+  # 提取 Y 矩阵的系数
+  LifeCycleSavings_cancor$ycoef
+  
+# 计算相关矩阵
+  mats <- matcor(X = X, Y = Y)
+  mats
+  
+# 绘制相关矩阵图
+  img.matcor(correl = mats, type = 1)
+  img.matcor(correl = mats, type = 2)
+  
+# 绘制变量的权重图
+  plt.cc(res = LifeCycleSavings_cancor, d1 = 1, d2 = 2, type = "v",
+         var.label = TRUE)
+  abline(h = 0, v = 0, col = "red")
+  title(main = "典型分析中变量作用的权重图")
+  
+  detach(name = LifeCycleSavings_std)
+ 
+```  
+  
+变量权重图的说明：
+
+* 位于内圈之中的变量一般含有较小的权重，因此对典型相关分析的作用不大，如变量 ddpi。
+  
+* 位于外圈之中的变量一般含有较大的权重，因此对典型相关分析具有较大的作用。
+  
+### 对典型变量系数的解释
+  
+对于如何最好地解释典型变量，一直存在争议：
+ 
+* 使用主成分分析中的方法来解释系数，但是这种解释无法解决共线性问题。
+  
+* 计算典型变量与原始变量之间的相关系数，但是这种解释忽略了变量之间的联合分布。
+  
+# 多维标度分析
+ 
+## 多维标度的定义
+
+多维标度（Multidimensional scaling）的首要目标：在最小化由降维导致的信息损失的条件下，将原始数据“拟合”到一个低维坐标系中。
+
+在多维标度分析中，使用欧氏距离来测量数据点之间的相似度。由于数据的降维必然会损失原始数据中的部分信息，因此需要衡量降维后数据间的相似度与原始数据间的相似度的近似程度，这种近似程度的数值表示就称为 stress。
+  
+我们可以对 $N$ 个观测对象之间的相似度（欧式距离）进行排序，从而得到 $N(N-1)/2$ 个秩排序（rank order）。
+
+* 如果仅使用秩排序进行几何展示，就称为非度量性多维标度（nonmetric multidimensional scaling）。
+
+* 如果使用原始相似度的实际数值进行几何展示，就称为度量性多维标度（metric multidimensional scaling），也称为主坐标分析（principal coordinate analysis）。
+
+标度变换方法是由 Shepard 和 Kruskal 等人提出的。
+
+## 计算方法  
+  
+对于 $N$ 个观测样例，可计算出 $N(N-1)/2$ 个两两之间的相似度（欧式距离），这些相似度构成了多维标度分析的基本数据。
+
+假定这些相似度数据之间没有结（tie）的存在，即各个相似度都是不等的，那么可将相似度按照升序排序为：
+ 
+$$S_{i_{1} k_{1}}<S_{i_{2} k_{2}}<\cdots<S_{i_{M} k_{M}}$$  
+
+其中，$S_{i_{1} k_{1}}$ 为相似度最小的，也就意味着最不相似。下标 $i_{1}k_{1}$ 表示最不相似的那一对观测对象，即在相似性排序中等级为 $1$ 的观测对象。
+
+我们的目标是在对数据进行降维后，降维后的数据点之间的相似度排序依然能够保持原始数据之间的排序。对此，Kruskal 提出了一个降维后数据排序偏离原始排序程度的指标，称为 stress：
+
+$$\operatorname{Stress}(q)=\left\{\frac{\sum_{i<k}\left(d_{i k}^{(q)}-\hat{d}_{i k}^{(q)}\right)^{2}}{\sum_{i<k} \sum_{i k}\left[d_{i k}^{(q)}\right]^{2}}\right\}^{1 / 2}$$ 
+
+Kruskal stress 判断准则为：
+
+```{r}
+
+# Kruskal stress 判断准则
+  img <- readPNG(source = "Pictures/Kruskal stress 判断准则.PNG")
+  grid.raster(image = img, name = "Kruskal stress 判断准则")
+  
+```
+
+第二种偏离度的量度是由 Takane 等人提出的，它是目前使用最多的准则：
+  
+$$\text { SStress }=\left[\frac{\sum_{i<k} \sum_{i<k}\left(d_{i k}^{2}-\hat{d}_{i k}^{2}\right)^{2}}{\sum_{i<k} \mathrm{~d}_{i k}^{4}}\right]^{1 / 2}$$
+ 
+* SStress 的取值在 $0\sim{1}$ 之间，如果 $SStress < 0.1$ 就意味着降维后的数据能够很好地代表原始数据。
+  
+多维标度分析可归纳成以下几个步骤：
+
+* 第一步：对 $N$ 个观测对象计算 $M=N(N-1)/2$ 个相似度（欧式距离），然后将这些相似度按照升序排序。
+
+* 第二步：使用一个尝试性 $q$ 维点结构计算各点之间距离，不断迭代改进 $q$ 值，直至 $q$ 值能够得到最优 stress。
+  
+## 示例
+
+在 R 中，度量性多维标度分析使用程序包 stats 中的函数 cmdscale，其中：
+
+* 参数 d 表示距离矩阵
+
+* 参数 k 表示数据降维后的最大维度
+
+```{r}
+
+# 读取数据
+  data("USArrests", package = "datasets")
+  anyNA(x = USArrests)
+  
+# 计算欧氏距离 
+  spot <- dist(x = USArrests, method = "euclidean")
+  
+# 多维标度分析：以列表形式返回结果
+  what <- cmdscale(d = spot, k = 2, eig = TRUE)
+  
+  # 提取数据点：以矩阵的形式返回结果
+  points <- what$points
+  head(x = points, n = 3)  
+
+  # 提取特征根
+  what$eig
+
+  # 提取模型的拟合优度
+  what$GOF
+
+# 绘制降维后的数据散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = points[, 1], y = points[, 2], type = "p", col = "blue", pch = 20,
+       panel.first = grid(), xlab = "Coordinate 1", ylab = "Coordinate 2", 
+       main = "Two-dimensional classical MDS solution for USArrests")
+  maptools::pointLabel(x = points[, 1], y = points[, 2], cex = 0.8, col = "red",
+                       method = "SANN", allowSmallOverlap = FALSE, 
+                       labels = rownames(x = points))
+  abline(h = 0, v = 0, col = "steelblue", lty = 2)
+  par(opar)
+  
+```  
+
+在 R 中，非度量性多维标度分析使用程序包 MASS 中的函数 isoMDS，其中：
+
+* 参数 d 表示距离矩阵
+
+* 参数 k 表示数据降维后的最大维度  
+
+```{r}
+
+# 读取数据
+  data("voting", package = "HSAUR2")
+  anyNA(x = voting)
+  is.matrix(x = voting)
+
+# 非度量性多维标度分析  
+  library(MASS)
+  voting.mds <- isoMDS(d = voting, k = 2)
+
+  # 提取数据点：以矩阵的形式返回结果
+  points <- voting.mds$points
+  head(x = points, n = 3)
+
+  # 提取 stress：百分比
+  voting.mds$stress
+
+# 绘制降维后的数据散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = points[, 1], y = points[, 2], type = "p", col = "blue", pch = 20,
+       panel.first = grid(), xlab = "Coordinate 1", ylab = "Coordinate 2", 
+       main = "Non-metric multidimensional scaling for House of Representatives Voting")
+  maptools::pointLabel(x = points[, 1], y = points[, 2], cex = 0.8, col = "red",
+                       method = "SANN", allowSmallOverlap = FALSE, 
+                       labels = rownames(x = points))
+  abline(h = 0, v = 0, col = "steelblue", lty = 2)
+  par(opar)
+
+```    
+
+```{r}
+
+# 读取数据
+  data("wwiileaders", package = "qdata")
+  anyNA(x = wwiileaders)
+  class(x = wwiileaders)
+
+# 非度量性多维标度分析  
+  library(MASS)
+  leaders.mds <- isoMDS(d = wwiileaders, k = 2)
+
+  # 提取数据点：以矩阵的形式返回结果
+  points <- leaders.mds$points
+  head(x = points, n = 3)
+
+  # 提取 stress：百分比
+  leaders.mds$stress
+
+# 绘制降维后的数据散点图
+  opar <- par(no.readonly = TRUE)
+  par(cex = 0.8, mar = c(6, 6, 4, 4))
+  plot(x = points[, 1], y = points[, 2], type = "p", col = "blue", pch = 20,
+       panel.first = grid(), xlab = "Coordinate 1", ylab = "Coordinate 2", 
+       main = "Non-metric multidimensional scaling for
+       12 Country Leaders of II World War")
+  maptools::pointLabel(x = points[, 1], y = points[, 2], cex = 0.8, 
+                       col = "steelblue", method = "SANN", 
+                       allowSmallOverlap = FALSE, labels = rownames(x = points))
+  abline(h = 0, v = 0, col = "red", lty = 2)
+  par(opar)  
+
+```
